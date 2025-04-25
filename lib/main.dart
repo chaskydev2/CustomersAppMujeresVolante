@@ -10,6 +10,7 @@ import 'package:customer/ui/splash_screen.dart';
 import 'package:customer/utils/DarkThemeProvider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
@@ -90,11 +91,24 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
                 context),
             localizationsDelegates: const [
               CountryLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
             ],
-            locale: LocalizationService.locale,
-            fallbackLocale: LocalizationService.locale,
+            supportedLocales: const [
+              Locale('es', 'ES'),
+              Locale('en', 'US'),
+            ],
+            locale: const Locale('es', 'ES'),
+            fallbackLocale: const Locale('es', 'ES'),
             translations: LocalizationService(),
-            builder: EasyLoading.init(),
+            builder: (context, child) {
+              return Localizations.override(
+                context: context,
+                locale: const Locale('es', 'ES'),
+                child: EasyLoading.init()(context, child),
+              );
+            },
             home: GetBuilder<GlobalSettingController>(
                 init: GlobalSettingController(),
                 builder: (context) {

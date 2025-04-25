@@ -1,0 +1,2 @@
+C:/Users/USUARIO/Downloads/Laravel-project/AppMujeresVolante/CustomersAppMujeresVolante/android/app/.cxx/Debug/p2z565r1/armeabi-v7a/CMakeFiles/edit_cache.dir
+C:/Users/USUARIO/Downloads/Laravel-project/AppMujeresVolante/CustomersAppMujeresVolante/android/app/.cxx/Debug/p2z565r1/armeabi-v7a/CMakeFiles/rebuild_cache.dir

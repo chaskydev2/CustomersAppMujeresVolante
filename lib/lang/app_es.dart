@@ -1,3 +1,5 @@
+import 'package:flutter_localizations/flutter_localizations.dart';
+
 // TODO Implement this library.
 const Map<String, String> esES = {
   'GoRide': 'GoRide',
@@ -185,7 +187,7 @@ const Map<String, String> esES = {
   "Invite Friend & Businesses": "Invitar a amigos y negocios",
   "Earn": "Gana",
   "each": "cada uno",
-  "Invite GoRide to sign up using your link and you’ll get":
+  "Invite GoRide to sign up using your link and you'll get":
       "Invita a GoRide a registrarse usando tu enlace y recibirás",
   "Invite a Friend": "Invita a un amigo",
   "They register": "Ellos se registran",
@@ -259,6 +261,7 @@ const Map<String, String> esES = {
   'Location Picker': 'Ubicacion de Recojo',
   'Select Location': 'Seleccionar ubicación',
   'Search Address': 'Buscar dirección',
+  'Select Country': 'Seleccionar País',
 };
 
 /*
@@ -456,8 +459,8 @@ const Map<String, String> enUS = {
   "Invite Friend & Businesses": "Invite Friend & Businesses",
   "Earn": "Earn",
   "each": "each",
-  "Invite GoRide to sign up using your link and you’ll get":
-      "Invite GoRide to sign up using your link and you’ll get",
+  "Invite GoRide to sign up using your link and you'll get":
+      "Invite GoRide to sign up using your link and you'll get",
   "Invite a Friend": "Invite a Friend",
   "They register": "They register",
   "Get Reward to complete first order": "Get Reward to complete first order",

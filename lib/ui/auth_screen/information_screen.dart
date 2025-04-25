@@ -82,22 +82,43 @@ class InformationScreen extends StatelessWidget {
                                     : AppColors.textField,
                                 contentPadding:
                                     const EdgeInsets.symmetric(vertical: 12),
-                                prefixIcon: CountryCodePicker(
-                                  onChanged: (value) {
-                                    controller.countryCode.value =
-                                        value.dialCode.toString();
-                                  },
-                                  dialogBackgroundColor: themeChange.getThem()
-                                      ? AppColors.darkBackground
-                                      : AppColors.background,
-                                  initialSelection:
-                                      controller.countryCode.value,
-                                  comparator: (a, b) =>
-                                      b.name!.compareTo(a.name.toString()),
-                                  flagDecoration: const BoxDecoration(
-                                    borderRadius:
-                                        BorderRadius.all(Radius.circular(2)),
-                                  ),
+                                prefixIcon: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    CountryCodePicker(
+                                      onChanged: (value) {
+                                        controller.countryCode.value =
+                                            value.dialCode.toString();
+                                      },
+                                      dialogBackgroundColor: themeChange.getThem()
+                                          ? AppColors.darkBackground
+                                          : AppColors.background,
+                                      initialSelection:
+                                          controller.countryCode.value,
+                                      comparator: (a, b) =>
+                                          b.name!.compareTo(a.name.toString()),
+                                      flagDecoration: const BoxDecoration(
+                                        borderRadius:
+                                            BorderRadius.all(Radius.circular(2)),
+                                      ),
+                                      dialogTextStyle: const TextStyle(fontSize: 16),
+                                      searchStyle: const TextStyle(fontSize: 16),
+                                      searchDecoration: InputDecoration(
+                                        hintText: 'Seleccionar un país',
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'Seleccionar un país',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: themeChange.getThem() ? Colors.white : Colors.black54,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                                 disabledBorder: OutlineInputBorder(
                                   borderRadius: const BorderRadius.all(

@@ -106,6 +106,14 @@ class LoginScreen extends StatelessWidget {
                                     borderRadius:
                                         BorderRadius.all(Radius.circular(2)),
                                   ),
+                                  dialogTextStyle: const TextStyle(fontSize: 16),
+                                  searchStyle: const TextStyle(fontSize: 16),
+                                  searchDecoration: InputDecoration(
+                                    hintText: 'Seleccionar un país',
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                  ),
                                 ),
                                 disabledBorder: OutlineInputBorder(
                                   borderRadius: const BorderRadius.all(
