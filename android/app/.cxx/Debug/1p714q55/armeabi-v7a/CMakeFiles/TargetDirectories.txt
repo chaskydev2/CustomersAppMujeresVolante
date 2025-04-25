@@ -1,0 +1,2 @@
+C:/Users/USUARIO/Desktop/mujeres al volante/newMVolante/android/app/.cxx/Debug/1p714q55/armeabi-v7a/CMakeFiles/edit_cache.dir
+C:/Users/USUARIO/Desktop/mujeres al volante/newMVolante/android/app/.cxx/Debug/1p714q55/armeabi-v7a/CMakeFiles/rebuild_cache.dir
