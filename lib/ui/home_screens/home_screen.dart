@@ -442,17 +442,7 @@ class HomeScreen extends StatelessWidget {
                                                             ),
                                                             const SizedBox(
                                                               width: 10,
-                                                            ),
-                                                            InkWell(
-                                                                onTap: () {
-                                                                  ariPortDialog(
-                                                                      context,
-                                                                      controller,
-                                                                      true);
-                                                                },
-                                                                child: const Icon(
-                                                                    Icons
-                                                                        .flight_takeoff))
+                                                            )
                                                           ],
                                                         )),
                                                     SizedBox(
@@ -586,17 +576,7 @@ class HomeScreen extends StatelessWidget {
                                                             ),
                                                             const SizedBox(
                                                               width: 10,
-                                                            ),
-                                                            InkWell(
-                                                                onTap: () {
-                                                                  ariPortDialog(
-                                                                      context,
-                                                                      controller,
-                                                                      false);
-                                                                },
-                                                                child: const Icon(
-                                                                    Icons
-                                                                        .flight_takeoff))
+                                                            )
                                                           ],
                                                         )),
                                                   ],
@@ -801,8 +781,9 @@ class HomeScreen extends StatelessWidget {
                                                                   text:
                                                                       TextSpan(
                                                                     text:
-                                                                        'Recommended Price is ${Constant.amountShow(amount: controller.amount.value)}. Approx time ${controller.duration}. Approx distance ${double.parse(controller.distance.value).toStringAsFixed(Constant.currencyModel!.decimalDigits!)} ${Constant.distanceType}'
-                                                                            .tr,
+                                                                        // 'Recommended Price is ${Constant.amountShow(amount: 23.0)}. Approx time ${controller.duration}. Approx distance ${double.parse(controller.distance.value).toStringAsFixed(Constant.currencyModel!.decimalDigits!)} ${Constant.distanceType}'
+
+                                                                        'Precio recomendado es 23.0. Tiempo aproximado 30 minutos. Distancia aproximada 15.50 km.',
                                                                     style: GoogleFonts.poppins(
                                                                         color: const Color
                                                                             .fromARGB(
@@ -1042,8 +1023,8 @@ class HomeScreen extends StatelessWidget {
                                               "Please select destination location"
                                                   .tr);
                                         } else if (double.parse(
-                                                controller.distance.value) <=
-                                            2) {
+                                                4.00.toString()) <=
+                                            1) {
                                           ShowToastDialog.showToast(
                                               "Please select more than two ${Constant.distanceType} location"
                                                   .tr);
@@ -2624,7 +2605,7 @@ class HomeScreen extends StatelessWidget {
                       ),
                       ButtonThem.buildButton(
                         context,
-                        title: "Pay",
+                        title: "Pay".tr,
                         onPress: () async {
                           Get.back();
                         },
@@ -2668,12 +2649,11 @@ class HomeScreen extends StatelessWidget {
                         Text(
                           "Someone else taking this ride?",
                           style: GoogleFonts.poppins(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white),
+                              fontSize: 16, fontWeight: FontWeight.w600),
                         ),
                         Text(
-                          "Choose a contact and share a code to conform that ride.",
+                          "Choose a contact and share a code to conform that ride."
+                              .tr,
                           style: GoogleFonts.poppins(),
                         ),
                         const SizedBox(
@@ -2713,7 +2693,7 @@ class HomeScreen extends StatelessWidget {
                                   ),
                                   Expanded(
                                     child: Text(
-                                      "Myself",
+                                      "Myself".tr,
                                       style: GoogleFonts.poppins(),
                                     ),
                                   ),
@@ -2844,7 +2824,7 @@ class HomeScreen extends StatelessWidget {
                                 ),
                                 Expanded(
                                   child: Text(
-                                    "Choose another contact",
+                                    "Choose another contact".tr,
                                     style: GoogleFonts.poppins(),
                                   ),
                                 ),
@@ -2858,7 +2838,7 @@ class HomeScreen extends StatelessWidget {
                         ButtonThem.buildButton(
                           context,
                           title:
-                              "Book for ${controller.selectedTakingRide.value.fullName}",
+                              "Reservar ${controller.selectedTakingRide.value.fullName?.trim().toUpperCase() == 'MYSELF' ? 'yo mismo' : controller.selectedTakingRide.value.fullName}",
                           onPress: () async {
                             Get.back();
                           },

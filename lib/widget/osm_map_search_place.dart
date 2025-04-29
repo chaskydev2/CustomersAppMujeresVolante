@@ -1,7 +1,10 @@
+import 'dart:convert';
+
 import 'package:customer/controller/osm_search_place_controller.dart';
 import 'package:customer/themes/app_colors.dart';
 import 'package:customer/utils/DarkThemeProvider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_osm_interface/src/types/search_completion.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -122,11 +125,15 @@ class OsmSearchPlacesApi extends StatelessWidget {
                       itemBuilder: (context, index) {
                         return ListTile(
                           title: Text(
-                            controller.suggestionsList[index].address
+                            controller.suggestionsList[index].displayName
                                 .toString(),
                             style: TextStyle(),
                           ),
                           onTap: () {
+                            // Regresa el resultado seleccionado
+                            print(
+                                "Selected place: ${controller.suggestionsList[index]}");
+
                             Get.back(result: controller.suggestionsList[index]);
                           },
                         );
@@ -139,4 +146,8 @@ class OsmSearchPlacesApi extends StatelessWidget {
           );
         });
   }
+}
+
+extension on SearchInfo {
+  Object? toJson() {}
 }

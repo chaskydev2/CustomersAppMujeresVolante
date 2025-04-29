@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'package:customer/model/palce_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:get/get.dart';
@@ -9,7 +10,7 @@ import 'dart:math';
 
 class OsmSearchPlaceController extends GetxController {
   Rx<TextEditingController> searchTxtController = TextEditingController().obs;
-  RxList<SearchInfo> suggestionsList = <SearchInfo>[].obs;
+  RxList<Place> suggestionsList = <Place>[].obs;
   final String apiKeyNew = 'AIzaSyBF8F0YnhknJa_cvyMmaJvRVTqPS-somdk';
 
   @override
@@ -30,52 +31,92 @@ class OsmSearchPlaceController extends GetxController {
       return;
     }
 
-    List<SearchInfo> results = await searchInBolivia(text);
+    List<Place> results = await searchInBolivia(text);
     print(":: fetchAddress (BO) :: ${results}");
     suggestionsList.value = results;
   }
 
-  Future<List<SearchInfo>> searchInBolivia(String text) async {
+  Future<List<Place>> searchInBolivia(String text) async {
     final locationData = await Utils.getCurrentLocation();
     final lat = locationData.latitude;
     final lon = locationData.longitude;
 
-    final searchQuery = "$text, Cochabamba, Bolivia";
-    final url = Uri.parse(
-      'https://maps.googleapis.com/maps/api/geocode/json?address=$searchQuery&key=$apiKeyNew',
+    final urlAutocomplete = Uri.parse(
+      'https://maps.googleapis.com/maps/api/place/autocomplete/json'
+      '?input=$text'
+      '&components=country:BO'
+      '&location=$lat,$lon'
+      '&radius=50000' // 50km a la redonda, ajustable
+      '&types=establishment'
+      '&key=$apiKeyNew',
     );
 
-    final response = await http.get(url);
-    if (response.statusCode != 200) {
-      throw Exception("Error del servidor: código ${response.statusCode}");
+    final responseAutocomplete = await http.get(urlAutocomplete);
+    if (responseAutocomplete.statusCode != 200) {
+      throw Exception(
+          "Error del servidor (autocomplete): ${responseAutocomplete.statusCode}");
     }
 
-    final detailsData = jsonDecode(response.body);
-    final status = detailsData['status'] as String? ?? 'UNKNOWN';
-    final results = detailsData['results'] as List<dynamic>?;
+    final autoData = jsonDecode(responseAutocomplete.body);
+    final predictions = autoData['predictions'] as List<dynamic>?;
 
-    // Si no es OK, simplemente regresamos lista vacía en lugar de excepción
-    if (status != 'OK' || results == null || results.isEmpty) {
+    if (autoData['status'] != 'OK' ||
+        predictions == null ||
+        predictions.isEmpty) {
       print(
-          "Google Geocode API status=$status, resultados=${results?.length ?? 0}");
-      return <SearchInfo>[];
+          "Google Places Autocomplete API status=${autoData['status']}, resultados=${predictions?.length ?? 0}");
+      return <Place>[];
     }
 
-    // Filtro para asegurarse de que solo se devuelvan resultados dentro de 50 km
-    return results.where((e) {
-      final latResult = (e['geometry']['location']['lat'] as num).toDouble();
-      final lonResult = (e['geometry']['location']['lng'] as num).toDouble();
+    List<Place> searchResults = [];
 
-      // Calcula la distancia entre la ubicación actual y el resultado
-      double distance = calculateDistance(lat, lon, latResult, lonResult);
-      return distance <= 50; // Filtra por 50 km
-    }).map((e) {
-      final latResult = (e['geometry']['location']['lat'] as num).toDouble();
-      final lonResult = (e['geometry']['location']['lng'] as num).toDouble();
-      final address = e['formatted_address'] as String;
+    for (final prediction in predictions) {
+      final placeId = prediction['place_id'];
+      final urlDetails = Uri.parse(
+        'https://maps.googleapis.com/maps/api/place/details/json?place_id=$placeId&fields=name,geometry,address_components,formatted_address&key=$apiKeyNew',
+      );
 
-      // Busca el componente de país
-      final countryComp = (e['address_components'] as List<dynamic>).firstWhere(
+      final responseDetails = await http.get(urlDetails);
+      if (responseDetails.statusCode != 200) {
+        continue; // Saltamos si falla este lugar
+      }
+
+      final detailsData = jsonDecode(responseDetails.body);
+      if (detailsData['status'] != 'OK' || detailsData['result'] == null) {
+        continue;
+      }
+
+      final result = detailsData['result'];
+      final geometry = result['geometry']['location'];
+      final latResult = (geometry['lat'] as num).toDouble();
+      final lonResult = (geometry['lng'] as num).toDouble();
+
+      // Calculamos la distancia desde la ubicación actual
+      final distance = calculateDistance(lat, lon, latResult, lonResult);
+      if (distance > 50) continue;
+
+      // Obtenemos la dirección formateada
+      String address = result['formatted_address'] ?? 'Sin dirección';
+
+      // Verificar y eliminar el Plus Code si está presente en la dirección
+      if (RegExp(r'^[A-Z0-9]{4,}\+').hasMatch(address)) {
+        final parts = address.split(',').skip(1).map((e) => e.trim()).toList();
+        address = parts.join(', ');
+      }
+
+      // Obtener los componentes de la dirección (por ejemplo, ciudad)
+      final addressComponents = result['address_components'] as List<dynamic>;
+      String city = '';
+
+      for (var component in addressComponents) {
+        final types = List<String>.from(component['types'] ?? []);
+        if (types.contains('locality')) {
+          city = component['long_name'];
+        }
+      }
+
+      // Buscar componente de país
+      final countryComp = addressComponents.firstWhere(
         (comp) => (comp['types'] as List).contains('country'),
         orElse: () => null,
       );
@@ -83,14 +124,24 @@ class OsmSearchPlaceController extends GetxController {
           ? countryComp['long_name'] as String
           : 'Desconocido';
 
-      return SearchInfo(
-        point: GeoPoint(latitude: latResult, longitude: lonResult),
-        address: Address(
-          country: country,
-          name: address,
+      /*
+      searchResults.add(
+        SearchInfo(
+          point: GeoPoint(latitude: latResult, longitude: lonResult),
+          address: Address(
+            country: country,
+            name: address,
+            city: city, // Solo incluimos la ciudad
+          ),
         ),
       );
-    }).toList();
+      */
+
+      searchResults
+          .add(Place(displayName: address, lat: latResult, lon: lonResult));
+    }
+
+    return searchResults;
   }
 
   double calculateDistance(double lat1, double lon1, double lat2, double lon2) {

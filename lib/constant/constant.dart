@@ -42,7 +42,7 @@ class Constant {
   static const String appleLoginType = "apple";
 
   //// API key para Google Maps.
-  static String mapAPIKey = "";
+  static String mapAPIKey = "AIzaSyBF8F0YnhknJa_cvyMmaJvRVTqPS-somdk";
 
   static String senderId = '';
   static String jsonNotificationFileURL = '';
@@ -232,14 +232,12 @@ class Constant {
 
   static Future<Map<String, dynamic>> getDurationOsmDistance(
       LatLng departureLatLong, LatLng destinationLatLong) async {
-    String url = 'http://router.project-osrm.org/route/v1/driving';
+    String url =
+        'https://maps.googleapis.com/maps/api/directions/json?origin=${departureLatLong.latitude},${departureLatLong.longitude}&destination=${destinationLatLong.latitude},${destinationLatLong.longitude}&key=AIzaSyBF8F0YnhknJa_cvyMmaJvRVTqPS-somdk';
     String coordinates =
         '${departureLatLong.longitude},${departureLatLong.latitude};${destinationLatLong.longitude},${destinationLatLong.latitude}';
 
-    http.Response response = await http
-        .get(Uri.parse('$url/$coordinates?overview=false&steps=false'));
-
-    log(response.body.toString());
+    http.Response response = await http.get(Uri.parse(url));
 
     return jsonDecode(response.body);
   }

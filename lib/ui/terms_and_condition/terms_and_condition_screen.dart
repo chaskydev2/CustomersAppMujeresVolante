@@ -7,7 +7,7 @@ import 'package:get/get.dart';
 
 class TermsAndConditionScreen extends StatelessWidget {
   final String? type;
-  const TermsAndConditionScreen({super.key,this.type});
+  const TermsAndConditionScreen({super.key, this.type});
 
   @override
   Widget build(BuildContext context) {
@@ -15,7 +15,9 @@ class TermsAndConditionScreen extends StatelessWidget {
       backgroundColor: AppColors.primary,
       appBar: AppBar(
         elevation: 0,
-        title: Text(type == "privacy" ? "Privacy Policy".tr : "Terms and Conditions".tr),
+        title: Text(type == "privacy"
+            ? "Privacy Policy".tr
+            : "Terms and Conditions".tr),
         leading: InkWell(
             onTap: () {
               Get.back();
@@ -32,18 +34,26 @@ class TermsAndConditionScreen extends StatelessWidget {
           ),
           Expanded(
             child: Container(
-              decoration: BoxDecoration(color: Theme.of(context).colorScheme.background, borderRadius: const BorderRadius.only(topLeft: Radius.circular(25), topRight: Radius.circular(25))),
+              margin: const EdgeInsets.symmetric(
+                  horizontal: 10), // Margen para separar del borde
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.background,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(25),
+                  topRight: Radius.circular(25),
+                ),
+              ),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14),
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 10),
-                  child: SingleChildScrollView(
-                    child: Html(
-                      shrinkWrap: true,
-                      data: type == "privacy"
-                          ? Constant.localizationPrivacyPolicy(Constant.privacyPolicy)
-                          : Constant.localizationTermsCondition(Constant.termsAndConditions),
-                    ),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 16, vertical: 12), // Padding uniforme
+                child: SingleChildScrollView(
+                  child: Html(
+                    shrinkWrap: true,
+                    data: type == "privacy"
+                        ? Constant.localizationPrivacyPolicy(
+                            Constant.privacyPolicy)
+                        : Constant.localizationTermsCondition(
+                            Constant.termsAndConditions),
                   ),
                 ),
               ),

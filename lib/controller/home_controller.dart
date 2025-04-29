@@ -21,7 +21,6 @@ import 'package:geocoding/geocoding.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:osm_nominatim/osm_nominatim.dart';
-import 'dart:math';
 
 class HomeController extends GetxController {
   DashBoardController dashboardController = Get.put(DashBoardController());
@@ -99,7 +98,7 @@ class HomeController extends GetxController {
       }
     } catch (e) {
       ShowToastDialog.showToast(
-        "Location access permission is currently unavailable. You're unable to retrieve any location data. Please grant permission from your device settings.",
+        "El permiso de acceso a la ubicación no está disponible actualmente. No puedes obtener datos de ubicación. Por favor, otorga el permiso desde la configuración de tu dispositivo.",
         duration: const Duration(seconds: 3),
       );
     }
@@ -181,62 +180,40 @@ class HomeController extends GetxController {
   }
 
   calculateDurationAndDistance() async {
-    if (Constant.selectedMapType == 'osm') {
-      if (sourceLocationLAtLng.value.latitude != null &&
-          destinationLocationLAtLng.value.latitude != null) {
-        ShowToastDialog.showLoader("Please wait");
-        await Constant.getDurationOsmDistance(
-                LatLng(sourceLocationLAtLng.value.latitude!,
-                    sourceLocationLAtLng.value.longitude!),
-                LatLng(destinationLocationLAtLng.value.latitude!,
-                    destinationLocationLAtLng.value.longitude!))
-            .then((value) {
-          if (value != {} && value.isNotEmpty) {
-            int hours = value['routes'].first['duration'] ~/ 3600;
-            int minutes =
-                ((value['routes'].first['duration'] % 3600) / 60).round();
-            duration.value = '$hours hours $minutes minutes'.trim();
-            if (Constant.distanceType == "Km") {
-              distance.value =
-                  (value['routes'].first['distance'] / 1000).toString();
-            } else {
-              distance.value =
-                  (value['routes'].first['distance'] / 1609.34).toString();
-            }
+    if (sourceLocationLAtLng.value.latitude != null &&
+        destinationLocationLAtLng.value.longitude != null &&
+        destinationLocationLAtLng.value.latitude != null &&
+        destinationLocationLAtLng.value.longitude != null) {
+      ShowToastDialog.showLoader("Por favor espera...");
+
+      try {
+        Map<String, dynamic> value = await Constant.getDurationOsmDistance(
+          LatLng(sourceLocationLAtLng.value.latitude!,
+              sourceLocationLAtLng.value.longitude!),
+          LatLng(destinationLocationLAtLng.value.latitude!,
+              destinationLocationLAtLng.value.longitude!),
+        );
+
+        if (value.isNotEmpty &&
+            value['routes'] != null &&
+            value['routes'].isNotEmpty) {
+          final leg = value['routes'][0]['legs'][0];
+
+          // Asignar duración (texto)
+          duration.value = leg['duration']['text']; // Ejemplo: "10 mins"
+
+          // Asignar distancia (valor)
+          if (Constant.distanceType == "Km") {
+            distance.value = (leg['distance']['value'] / 1000).toString();
+          } else {
+            distance.value = (leg['distance']['value'] / 1609.34).toString();
           }
-          update();
-        });
-      }
-      ShowToastDialog.closeLoader();
-    } else {
-      if (sourceLocationLAtLng.value.latitude != null &&
-          destinationLocationLAtLng.value.latitude != null) {
-        ShowToastDialog.showLoader("Please wait");
-        await Constant.getDurationDistance(
-                LatLng(sourceLocationLAtLng.value.latitude!,
-                    sourceLocationLAtLng.value.longitude!),
-                LatLng(destinationLocationLAtLng.value.latitude!,
-                    destinationLocationLAtLng.value.longitude!))
-            .then((value) {
-          if (value != null) {
-            duration.value =
-                value.rows!.first.elements!.first.duration!.text.toString();
-            print("duration :: 00 :: ${duration.value}");
-            if (Constant.distanceType == "Km") {
-              distance.value =
-                  (value.rows!.first.elements!.first.distance!.value!.toInt() /
-                          1000)
-                      .toString();
-            } else {
-              distance.value =
-                  (value.rows!.first.elements!.first.distance!.value!.toInt() /
-                          1609.34)
-                      .toString();
-            }
-          }
-          update();
-        });
+        }
+      } catch (e) {
+        print('Error fetching distance and duration: $e');
+      } finally {
         ShowToastDialog.closeLoader();
+        update();
       }
     }
   }
@@ -246,7 +223,7 @@ class HomeController extends GetxController {
     nonAcCharge.value = selectedType.value.nonAcCharge.toString();
     basicFare.value = selectedType.value.basicFare.toString();
     basicFareCharge.value = selectedType.value.basicFareCharge.toString();
-    isAcNonAc.value = selectedType.value.isAcNonAc ?? false;
+    isAcNonAc.value = true!;
     String formatTime(String? time) {
       if (time == null || !time.contains(":")) {
         return "00:00";
@@ -268,53 +245,46 @@ class HomeController extends GetxController {
         currentDate.day, int.parse(endParts[0]), int.parse(endParts[1]));
 
     nightCharge.value = selectedType.value.nightCharge.toString();
-
-    basicFare.value = '50';
-
     if (sourceLocationLAtLng.value.latitude != null &&
         destinationLocationLAtLng.value.latitude != null) {
-      double durationValueInMinutes = convertToMinutes(duration.toString());
-      if (double.parse(distance.value.isNotEmpty ? distance.value : '0') <=
-          double.parse(basicFare.value.isNotEmpty ? basicFare.value : '0')) {
-        amount.value = 40.toString();
+      String distanceValueAux = "2.00";
 
-        totalNightFare.value =
-            double.parse(amount.value.isNotEmpty ? amount.value : '0');
+      double durationValueInMinutes = convertToMinutes(duration.toString());
+      if (double.parse(distance.value) <= double.parse(distanceValueAux)) {
+        amount.value = ((double.parse(basicFareCharge.value.toString())) +
+                (double.parse(durationValueInMinutes.toString()) *
+                    double.parse(
+                        selectedType.value.perMinuteCharge.toString())))
+            .toStringAsFixed(Constant.currencyModel!.decimalDigits!);
+
+        totalNightFare.value = double.parse(amount.value);
         if (currentTime.isAfter(startNightTimeString) &&
             currentTime.isBefore(endNightTimeString)) {
           amount.value = (totalNightFare.value *
-                  double.parse(nightCharge.value.toString().isNotEmpty
-                      ? nightCharge.value.toString()
-                      : '0'))
+                  double.parse(nightCharge.value.toString()))
               .toStringAsFixed(2);
         }
       } else {
-        double distanceValue = double.tryParse(distance.value) ??
-            Random().nextDouble() * 10; // Valor aleatorio si es null
-        double basicFareValue = double.tryParse(basicFare.value) ??
-            Random().nextDouble() * 10; // Valor aleatorio si es null
+        double distanceValue = double.tryParse(distance.value) ?? 0.0;
+        double basicFareValue = double.tryParse(basicFare.value) ?? 0.0;
         double extraDist = distanceValue - basicFareValue;
         extraDistance.value = extraDist;
         double nonAcChargeValue =
-            double.tryParse(nonAcCharge.value.toString()) ??
-                Random().nextDouble() * 10; // Valor aleatorio si es null
-        double acChargeValue = double.tryParse(acCharge.value.toString()) ??
-            Random().nextDouble() * 10; // Valor aleatorio si es null
+            double.tryParse(nonAcCharge.value.toString()) ?? 0.0;
+        double acChargeValue =
+            double.tryParse(acCharge.value.toString()) ?? 0.0;
         double perKmCharge = isAcNonAc.value == true
             ? isAcSelected.value == false
                 ? nonAcChargeValue
                 : acChargeValue
-            : double.tryParse(selectedType.value.kmCharge.toString()) ??
-                Random().nextDouble() * 10; // Valor aleatorio si es null
+            : double.tryParse(selectedType.value.kmCharge.toString()) ?? 0.0;
         double perMinuteCharge =
             double.tryParse(selectedType.value.perMinuteCharge.toString()) ??
-                Random().nextDouble() * 10; // Valor aleatorio si es null
+                0.0;
         double durationInMinutes =
-            double.tryParse(durationValueInMinutes.toString()) ??
-                Random().nextDouble() * 10; // Valor aleatorio si es null
+            double.tryParse(durationValueInMinutes.toString()) ?? 0.0;
         double basicFareChargeValue =
-            double.tryParse(basicFareCharge.value.toString()) ??
-                Random().nextDouble() * 10; // Valor aleatorio si es null
+            double.tryParse(basicFareCharge.value.toString()) ?? 0.0;
         totalAmount.value = (perKmCharge * extraDist) +
             (durationInMinutes * perMinuteCharge) +
             basicFareChargeValue;
@@ -325,9 +295,7 @@ class HomeController extends GetxController {
         if (currentTime.isAfter(startNightTimeString) &&
             currentTime.isBefore(endNightTimeString)) {
           amount.value = (totalNightFare.value *
-                  double.parse(nightCharge.value.toString().isNotEmpty
-                      ? nightCharge.value.toString()
-                      : '0'))
+                  double.parse(nightCharge.value.toString()))
               .toStringAsFixed(2);
         }
       }

@@ -17,7 +17,7 @@ class LoginController extends GetxController {
   Rx<GlobalKey<FormState>> formKey = GlobalKey<FormState>().obs;
 
   sendCode() async {
-    ShowToastDialog.showLoader("Please wait");
+    ShowToastDialog.showLoader("Please wait".tr);
     await FirebaseAuth.instance
         .verifyPhoneNumber(
       phoneNumber: countryCode + phoneNumberController.value.text,
@@ -28,7 +28,7 @@ class LoginController extends GetxController {
         if (e.code == 'invalid-phone-number') {
           ShowToastDialog.showToast("The provided phone number is not valid.");
         } else {
-          ShowToastDialog.showToast("Something went wrong.");
+          ShowToastDialog.showToast("Something went wrong.".tr);
         }
       },
       codeSent: (String verificationId, int? resendToken) {
@@ -44,21 +44,24 @@ class LoginController extends GetxController {
         .catchError((error) {
       debugPrint("catchError--->$error");
       ShowToastDialog.closeLoader();
-      ShowToastDialog.showToast("You have try many time please send otp after some time");
+      ShowToastDialog.showToast(
+          "You have try many time please send otp after some time");
     });
   }
 
   Future<UserCredential?> signInWithGoogle() async {
     try {
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn().catchError((error) {
+      final GoogleSignInAccount? googleUser =
+          await GoogleSignIn().signIn().catchError((error) {
         debugPrint("catchError--->$error");
         ShowToastDialog.closeLoader();
-        ShowToastDialog.showToast("Something went wrong");
+        ShowToastDialog.showToast("Something went wrong".tr);
         return null;
       });
 
       // Obtain the auth details from the request
-      final GoogleSignInAuthentication? googleAuth = await googleUser?.authentication;
+      final GoogleSignInAuthentication? googleAuth =
+          await googleUser?.authentication;
 
       // Create a new credential
       final credential = GoogleAuthProvider.credential(
@@ -78,7 +81,8 @@ class LoginController extends GetxController {
   Future<Map<String, dynamic>?> signInWithApple() async {
     try {
       // Request credential for the currently signed in Apple account.
-      AuthorizationCredentialAppleID appleCredential = await SignInWithApple.getAppleIDCredential(
+      AuthorizationCredentialAppleID appleCredential =
+          await SignInWithApple.getAppleIDCredential(
         scopes: [
           AppleIDAuthorizationScopes.email,
           AppleIDAuthorizationScopes.fullName,
@@ -88,14 +92,17 @@ class LoginController extends GetxController {
 
       // Create an `OAuthCredential` from the credential returned by Apple.
       final oauthCredential = OAuthProvider("apple.com").credential(
-        idToken: appleCredential.identityToken,
-          accessToken: appleCredential.authorizationCode
-      );
+          idToken: appleCredential.identityToken,
+          accessToken: appleCredential.authorizationCode);
 
       // Sign in the user with Firebase. If the nonce we generated earlier does
       // not match the nonce in `appleCredential.identityToken`, sign in will fail.
-      UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(oauthCredential);
-      return {"appleCredential": appleCredential, "userCredential": userCredential};
+      UserCredential userCredential =
+          await FirebaseAuth.instance.signInWithCredential(oauthCredential);
+      return {
+        "appleCredential": appleCredential,
+        "userCredential": userCredential
+      };
     } catch (e) {
       debugPrint(e.toString());
     }
@@ -103,9 +110,11 @@ class LoginController extends GetxController {
   }
 
   String generateNonce([int length = 32]) {
-    const charset = '0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._';
+    const charset =
+        '0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._';
     final random = Random.secure();
-    return List.generate(length, (_) => charset[random.nextInt(charset.length)]).join();
+    return List.generate(length, (_) => charset[random.nextInt(charset.length)])
+        .join();
   }
 
   /// Returns the sha256 hash of [input] in hex notation.

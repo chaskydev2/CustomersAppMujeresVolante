@@ -34,104 +34,71 @@ class GoogleGeocodingService {
         final placeId = firstResult['place_id'];
 
         // Obtener detalles adicionales del lugar
-        final placeDetails = await _getPlaceDetails(placeId);
+        final placeDetails = await _getPlaceDetails(placeId, firstResult);
 
+        print("placeDetails: $placeDetails");
         return Place(
-          displayName: formattedAddress,
-          lat: geometry['lat'],
-          lon: geometry['lng'],
-          extraTags: placeDetails['extraTags'],
-          nameDetails: placeDetails['nameDetails'],
-        );
+            displayName: placeDetails['displayName'],
+            lat: geometry['lat'],
+            lon: geometry['lng']);
       }
     }
 
     return null;
   }
 
-  Future<Map<String, dynamic>> _getPlaceDetails(String placeId) async {
-    final detailsUrl = Uri.parse(
-      'https://maps.googleapis.com/maps/api/place/details/json?place_id=$placeId&fields=name,international_phone_number,website,opening_hours,rating,user_ratings_total&key=$apiKey',
+  Future<Map<String, dynamic>> _getPlaceDetails(
+      String placeId, Map<String, dynamic> geocodeResult) async {
+    final placeDetailsUrl = Uri.parse(
+      'https://maps.googleapis.com/maps/api/place/details/json?place_id=$placeId&key=$apiKey',
     );
 
-    final detailsResponse = await http.get(detailsUrl);
+    final placeDetailsResponse = await http.get(placeDetailsUrl);
 
-    if (detailsResponse.statusCode == 200) {
-      final detailsData = jsonDecode(detailsResponse.body);
+    if (placeDetailsResponse.statusCode == 200) {
+      final detailsData = jsonDecode(placeDetailsResponse.body);
+
       if (detailsData['status'] == 'OK' && detailsData['result'] != null) {
         final result = detailsData['result'];
+        final geometry = result['geometry']['location'];
+        final latResult = (geometry['lat'] as num).toDouble();
+        final lonResult = (geometry['lng'] as num).toDouble();
 
-        // Puedes mapear los campos adicionales según tus necesidades
-        final extraTags = ExtraTags(
-          population: result['user_ratings_total']?.toString(),
-          place: result['types'] != null && result['types'].isNotEmpty
-              ? result['types'][0]
-              : null,
-        );
+        String address = result['formatted_address'] ?? 'Sin dirección';
+        if (RegExp(r'^[A-Z0-9]{4,}\+').hasMatch(address)) {
+          final parts =
+              address.split(',').skip(1).map((e) => e.trim()).toList();
+          address = parts.join(', ');
+        }
 
-        final nameDetails = NameDetails(
-          name: result['name'],
-          nameEs:
-              null, // Google no proporciona nombres en diferentes idiomas directamente
-          nameEn: null,
+        final addressComponents = result['address_components'] as List<dynamic>;
+        String city = '';
+
+        for (var component in addressComponents) {
+          final types = List<String>.from(component['types'] ?? []);
+          if (types.contains('locality')) {
+            city = component['long_name'];
+          }
+        }
+
+        final countryComp = addressComponents.firstWhere(
+          (comp) => (comp['types'] as List).contains('country'),
+          orElse: () => null,
         );
+        final country = countryComp != null
+            ? countryComp['long_name'] as String
+            : 'Desconocido';
+
+        final displayName = '$address';
 
         return {
-          'extraTags': extraTags,
-          'nameDetails': nameDetails,
+          'displayName': displayName,
+          'nameDetails': result['name'],
         };
       }
     }
 
-    return {
-      'extraTags': null,
-      'nameDetails': null,
-    };
-  }
-
-  Future<List<Place>> search(String query,
-      {required double centerLat, required double centerLon}) async {
-    final url = Uri.parse(
-      'https://maps.googleapis.com/maps/api/geocode/json?address=$query&key=$apiKey',
-    );
-
-    final response = await http.get(url);
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-
-      if (data['status'] == 'OK' && data['results'].isNotEmpty) {
-        final List<Place> places = [];
-
-        for (final result in data['results']) {
-          final location = result['geometry']['location'];
-          final lat = location['lat'];
-          final lon = location['lng'];
-
-          final distance = _calculateDistance(centerLat, centerLon, lat, lon);
-          if (distance > 50) continue;
-
-          final formattedAddress = result['formatted_address'];
-          final placeId = result['place_id'];
-
-          final placeDetails = await _getPlaceDetails(placeId);
-
-          places.add(
-            Place(
-              displayName: formattedAddress,
-              lat: lat,
-              lon: lon,
-              extraTags: placeDetails['extraTags'],
-              nameDetails: placeDetails['nameDetails'],
-            ),
-          );
-        }
-
-        return places;
-      }
-    }
-
-    return [];
+    return {};
   }
 
   double _calculateDistance(

@@ -67,7 +67,8 @@ class IntercityPaymentOrderController extends GetxController {
       if (value != null) {
         paymentModel.value = value;
 
-        Stripe.publishableKey = paymentModel.value.strip!.clientpublishableKey.toString();
+        Stripe.publishableKey =
+            paymentModel.value.strip!.clientpublishableKey.toString();
         Stripe.merchantIdentifier = 'GoRide';
         Stripe.instance.applySettings();
         setRef();
@@ -79,13 +80,15 @@ class IntercityPaymentOrderController extends GetxController {
       }
     });
 
-    await FireStoreUtils.getUserProfile(FireStoreUtils.getCurrentUid()).then((value) {
+    await FireStoreUtils.getUserProfile(FireStoreUtils.getCurrentUid())
+        .then((value) {
       if (value != null) {
         userModel.value = value;
       }
     });
 
-    await FireStoreUtils.getDriver(orderModel.value.driverId.toString()).then((value) {
+    await FireStoreUtils.getDriver(orderModel.value.driverId.toString())
+        .then((value) {
       if (value != null) {
         driverUserModel.value = value;
       }
@@ -95,7 +98,7 @@ class IntercityPaymentOrderController extends GetxController {
   }
 
   completeOrder() async {
-    ShowToastDialog.showLoader("Please wait..");
+    ShowToastDialog.showLoader("Por favor espere..");
     orderModel.value.paymentStatus = true;
     orderModel.value.paymentType = selectedPaymentMethod.value;
     orderModel.value.status = Constant.rideComplete;
@@ -112,9 +115,12 @@ class IntercityPaymentOrderController extends GetxController {
         userType: "driver",
         note: "Ride amount credited");
 
-    await FireStoreUtils.setWalletTransaction(transactionModel).then((value) async {
+    await FireStoreUtils.setWalletTransaction(transactionModel)
+        .then((value) async {
       if (value == true) {
-        await FireStoreUtils.updateDriverWallet(amount: calculateAmount().toString(), driverId: orderModel.value.driverId.toString());
+        await FireStoreUtils.updateDriverWallet(
+            amount: calculateAmount().toString(),
+            driverId: orderModel.value.driverId.toString());
       }
     });
 
@@ -130,27 +136,34 @@ class IntercityPaymentOrderController extends GetxController {
         userId: orderModel.value.driverId.toString(),
         note: "Admin commission debited");
 
-    await FireStoreUtils.setWalletTransaction(adminCommissionWallet).then((value) async {
+    await FireStoreUtils.setWalletTransaction(adminCommissionWallet)
+        .then((value) async {
       if (value == true) {
         await FireStoreUtils.updateDriverWallet(
-            amount: "-${Constant.calculateOrderAdminCommission(amount: (double.parse(orderModel.value.finalRate.toString()) - double.parse(couponAmount.toString())).toString())}",
+            amount:
+                "-${Constant.calculateOrderAdminCommission(amount: (double.parse(orderModel.value.finalRate.toString()) - double.parse(couponAmount.toString())).toString())}",
             driverId: orderModel.value.driverId.toString());
       }
     });
 
-    await FireStoreUtils.getIntercityFirstOrderOrNOt(orderModel.value).then((value) async {
+    await FireStoreUtils.getIntercityFirstOrderOrNOt(orderModel.value)
+        .then((value) async {
       if (value == true) {
         await FireStoreUtils.updateIntercityReferralAmount(orderModel.value);
       }
     });
 
     if (driverUserModel.value.fcmToken != null) {
-      Map<String, dynamic> playLoad = <String, dynamic>{"type": "intercity_order_payment_complete", "orderId": orderModel.value.id};
+      Map<String, dynamic> playLoad = <String, dynamic>{
+        "type": "intercity_order_payment_complete",
+        "orderId": orderModel.value.id
+      };
 
       await SendNotification.sendOneNotification(
           token: driverUserModel.value.fcmToken.toString(),
           title: 'Payment Received',
-          body: '${userModel.value.fullName}  has paid ${Constant.amountShow(amount: calculateAmount().toString())} for the completed ride.Check your earnings for details.',
+          body:
+              '${userModel.value.fullName}  has paid ${Constant.amountShow(amount: calculateAmount().toString())} for the completed ride.Check your earnings for details.',
           payload: playLoad);
     }
 
@@ -163,14 +176,17 @@ class IntercityPaymentOrderController extends GetxController {
   }
 
   completeCashOrder() async {
-    ShowToastDialog.showLoader("Please wait..");
+    ShowToastDialog.showLoader("Please wait".tr);
 
     orderModel.value.paymentType = selectedPaymentMethod.value;
     orderModel.value.status = Constant.rideComplete;
     orderModel.value.coupon = selectedCouponModel.value;
 
     await SendNotification.sendOneNotification(
-        token: driverUserModel.value.fcmToken.toString(), title: 'Payment changed.', body: '${userModel.value.fullName} has changed payment method.', payload: {});
+        token: driverUserModel.value.fcmToken.toString(),
+        title: 'Payment changed.',
+        body: '${userModel.value.fullName} has changed payment method.',
+        payload: {});
 
     await FireStoreUtils.setInterCityOrder(orderModel.value).then((value) {
       if (value == true) {
@@ -188,21 +204,30 @@ class IntercityPaymentOrderController extends GetxController {
     if (orderModel.value.taxList != null) {
       for (var element in orderModel.value.taxList!) {
         taxAmount.value = (double.parse(taxAmount.value) +
-                Constant().calculateTax(amount: (double.parse(orderModel.value.finalRate.toString()) - double.parse(couponAmount.value.toString())).toString(), taxModel: element))
+                Constant().calculateTax(
+                    amount:
+                        (double.parse(orderModel.value.finalRate.toString()) -
+                                double.parse(couponAmount.value.toString()))
+                            .toString(),
+                    taxModel: element))
             .toStringAsFixed(Constant.currencyModel!.decimalDigits!);
       }
     }
-    return (double.parse(orderModel.value.finalRate.toString()) - double.parse(couponAmount.value.toString())) + double.parse(taxAmount.value);
+    return (double.parse(orderModel.value.finalRate.toString()) -
+            double.parse(couponAmount.value.toString())) +
+        double.parse(taxAmount.value);
   }
 
   // Strip
   Future<void> stripeMakePayment({required String amount}) async {
     log(double.parse(amount).toStringAsFixed(0));
     try {
-      Map<String, dynamic>? paymentIntentData = await createStripeIntent(amount: amount);
+      Map<String, dynamic>? paymentIntentData =
+          await createStripeIntent(amount: amount);
       if (paymentIntentData!.containsKey("error")) {
         Get.back();
-        ShowToastDialog.showToast("Something went wrong, please contact admin.");
+        ShowToastDialog.showToast(
+            "Algo salió mal, por favor contacta al administrador.");
       } else {
         await Stripe.instance.initPaymentSheet(
             paymentSheetParameters: SetupPaymentSheetParameters(
@@ -263,8 +288,13 @@ class IntercityPaymentOrderController extends GetxController {
       };
       log(paymentModel.value.strip!.stripeSecret.toString());
       var stripeSecret = paymentModel.value.strip!.stripeSecret;
-      var response = await http.post(Uri.parse('https://api.stripe.com/v1/payment_intents'),
-          body: body, headers: {'Authorization': 'Bearer $stripeSecret', 'Content-Type': 'application/x-www-form-urlencoded'});
+      var response = await http.post(
+          Uri.parse('https://api.stripe.com/v1/payment_intents'),
+          body: body,
+          headers: {
+            'Authorization': 'Bearer $stripeSecret',
+            'Content-Type': 'application/x-www-form-urlencoded'
+          });
 
       return jsonDecode(response.body);
     } catch (e) {
@@ -273,7 +303,8 @@ class IntercityPaymentOrderController extends GetxController {
   }
 
   //mercadoo
-  mercadoPagoMakePayment({required BuildContext context, required String amount}) async {
+  mercadoPagoMakePayment(
+      {required BuildContext context, required String amount}) async {
     final headers = {
       'Authorization': 'Bearer ${paymentModel.value.mercadoPago!.accessToken}',
       'Content-Type': 'application/json',
@@ -295,7 +326,8 @@ class IntercityPaymentOrderController extends GetxController {
         "pending": "${Constant.globalUrl}payment/pending",
         "success": "${Constant.globalUrl}payment/success",
       },
-      "auto_return": "approved" // Automatically return after payment is approved
+      "auto_return":
+          "approved" // Automatically return after payment is approved
     });
 
     final response = await http.post(
@@ -320,13 +352,13 @@ class IntercityPaymentOrderController extends GetxController {
     }
   }
 
-
   //paypal
   paypalPaymentSheet(String amount, context) {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (BuildContext context) => UsePaypal(
-            sandboxMode: paymentModel.value.paypal!.isSandbox == true ? false : true,
+            sandboxMode:
+                paymentModel.value.paypal!.isSandbox == true ? false : true,
             clientId: paymentModel.value.paypal!.paypalClient ?? '',
             secretKey: paymentModel.value.paypal!.paypalSecret ?? '',
             returnURL: "com.parkme://paypalpay",
@@ -357,11 +389,13 @@ class IntercityPaymentOrderController extends GetxController {
     );
   }
 
-
   ///PayStack Payment Method
   payStackPayment(String totalAmount) async {
     await PayStackURLGen.payStackURLGen(
-            amount: (double.parse(totalAmount) * 100).toString(), currency: "NGN", secretKey: paymentModel.value.payStack!.secretKey.toString(), userModel: userModel.value)
+            amount: (double.parse(totalAmount) * 100).toString(),
+            currency: "NGN",
+            secretKey: paymentModel.value.payStack!.secretKey.toString(),
+            userModel: userModel.value)
         .then((value) async {
       if (value != null) {
         PayStackUrlModel payStackModel = value;
@@ -381,13 +415,15 @@ class IntercityPaymentOrderController extends GetxController {
           }
         });
       } else {
-        ShowToastDialog.showToast("Something went wrong, please contact admin.");
+        ShowToastDialog.showToast(
+            "Algo salió mal, por favor contacta al administrador.");
       }
     });
   }
 
   //flutter wave Payment Method
-  flutterWaveInitiatePayment({required BuildContext context, required String amount}) async {
+  flutterWaveInitiatePayment(
+      {required BuildContext context, required String amount}) async {
     final url = Uri.parse('https://api.flutterwave.com/v3/payments');
     final headers = {
       'Authorization': 'Bearer ${paymentModel.value.flutterWave!.secretKey}',
@@ -415,7 +451,8 @@ class IntercityPaymentOrderController extends GetxController {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      Get.to(MercadoPagoScreen(initialURl: data['data']['link']))!.then((value) {
+      Get.to(MercadoPagoScreen(initialURl: data['data']['link']))!
+          .then((value) {
         if (value) {
           ShowToastDialog.showToast("Payment Successful!!");
           completeOrder();
@@ -444,8 +481,13 @@ class IntercityPaymentOrderController extends GetxController {
 
   // payFast
   payFastPayment({required BuildContext context, required String amount}) {
-    PayStackURLGen.getPayHTML(payFastSettingData: paymentModel.value.payfast!, amount: amount.toString(), userModel: userModel.value).then((String? value) async {
-      bool isDone = await Get.to(PayFastScreen(htmlData: value!, payFastSettingData: paymentModel.value.payfast!));
+    PayStackURLGen.getPayHTML(
+            payFastSettingData: paymentModel.value.payfast!,
+            amount: amount.toString(),
+            userModel: userModel.value)
+        .then((String? value) async {
+      bool isDone = await Get.to(PayFastScreen(
+          htmlData: value!, payFastSettingData: paymentModel.value.payfast!));
       if (isDone) {
         Get.back();
         ShowToastDialog.showToast("Payment successfully");
@@ -476,26 +518,40 @@ class IntercityPaymentOrderController extends GetxController {
     final data = jsonDecode(response.body);
     print(paymentModel.value.paytm!.paytmMID.toString());
 
-    await verifyCheckSum(checkSum: data["code"], amount: amount, orderId: orderId).then((value) {
+    await verifyCheckSum(
+            checkSum: data["code"], amount: amount, orderId: orderId)
+        .then((value) {
       initiatePayment(amount: amount, orderId: orderId).then((value) {
         String callback = "";
         if (paymentModel.value.paytm!.isSandbox == true) {
-          callback = "${callback}https://securegw-stage.paytm.in/theia/paytmCallback?ORDER_ID=$orderId";
+          callback =
+              "${callback}https://securegw-stage.paytm.in/theia/paytmCallback?ORDER_ID=$orderId";
         } else {
-          callback = "${callback}https://securegw.paytm.in/theia/paytmCallback?ORDER_ID=$orderId";
+          callback =
+              "${callback}https://securegw.paytm.in/theia/paytmCallback?ORDER_ID=$orderId";
         }
 
         if (value.head.version.isEmpty) {
           ShowToastDialog.showToast("Payment Failed");
         } else {
           GetPaymentTxtTokenModel result = value;
-          startTransaction(context, txnTokenBy: result.body.txnToken, orderId: orderId, amount: amount, callBackURL: callback, isStaging: paymentModel.value.paytm!.isSandbox);
+          startTransaction(context,
+              txnTokenBy: result.body.txnToken,
+              orderId: orderId,
+              amount: amount,
+              callBackURL: callback,
+              isStaging: paymentModel.value.paytm!.isSandbox);
         }
       });
     });
   }
 
-  Future<void> startTransaction(context, {required String txnTokenBy, required orderId, required double amount, required callBackURL, required isStaging}) async {
+  Future<void> startTransaction(context,
+      {required String txnTokenBy,
+      required orderId,
+      required double amount,
+      required callBackURL,
+      required isStaging}) async {
     // try {
     //   var response = AllInOneSdk.startTransaction(
     //     paymentModel.value.paytm!.paytmMID.toString(),
@@ -531,7 +587,10 @@ class IntercityPaymentOrderController extends GetxController {
     // }
   }
 
-  Future verifyCheckSum({required String checkSum, required double amount, required orderId}) async {
+  Future verifyCheckSum(
+      {required String checkSum,
+      required double amount,
+      required orderId}) async {
     String getChecksum = "${Constant.globalUrl}payments/validatechecksum";
     final response = await http.post(
         Uri.parse(
@@ -548,15 +607,19 @@ class IntercityPaymentOrderController extends GetxController {
     return data['status'];
   }
 
-  Future<GetPaymentTxtTokenModel> initiatePayment({required double amount, required orderId}) async {
+  Future<GetPaymentTxtTokenModel> initiatePayment(
+      {required double amount, required orderId}) async {
     String initiateURL = "${Constant.globalUrl}payments/initiatepaytmpayment";
     String callback = "";
     if (paymentModel.value.paytm!.isSandbox == true) {
-      callback = "${callback}https://securegw-stage.paytm.in/theia/paytmCallback?ORDER_ID=$orderId";
+      callback =
+          "${callback}https://securegw-stage.paytm.in/theia/paytmCallback?ORDER_ID=$orderId";
     } else {
-      callback = "${callback}https://securegw.paytm.in/theia/paytmCallback?ORDER_ID=$orderId";
+      callback =
+          "${callback}https://securegw.paytm.in/theia/paytmCallback?ORDER_ID=$orderId";
     }
-    final response = await http.post(Uri.parse(initiateURL), headers: {}, body: {
+    final response =
+        await http.post(Uri.parse(initiateURL), headers: {}, body: {
       "mid": paymentModel.value.paytm!.paytmMID,
       "order_id": orderId,
       "key_secret": paymentModel.value.paytm!.merchantKey,
@@ -568,9 +631,11 @@ class IntercityPaymentOrderController extends GetxController {
     });
     print(response.body);
     final data = jsonDecode(response.body);
-    if (data["body"]["txnToken"] == null || data["body"]["txnToken"].toString().isEmpty) {
+    if (data["body"]["txnToken"] == null ||
+        data["body"]["txnToken"].toString().isEmpty) {
       Get.back();
-      ShowToastDialog.showToast("something went wrong, please contact admin.");
+      ShowToastDialog.showToast(
+          "something went wrong, please contact admin.".tr);
     }
     return GetPaymentTxtTokenModel.fromJson(data);
   }
@@ -627,10 +692,10 @@ class IntercityPaymentOrderController extends GetxController {
       ShowToastDialog.closeLoader();
       if (model.id != null) {
         Get.to(() => XenditScreen(
-          initialURl: model.invoiceUrl ?? '',
-          transId: model.id ?? '',
-          apiKey: paymentModel.value.xendit!.apiKey!.toString() ?? "",
-        ))!
+                  initialURl: model.invoiceUrl ?? '',
+                  transId: model.id ?? '',
+                  apiKey: paymentModel.value.xendit!.apiKey!.toString() ?? "",
+                ))!
             .then((value) {
           if (value == true) {
             ShowToastDialog.showToast("Payment Successful!!");
@@ -650,7 +715,8 @@ class IntercityPaymentOrderController extends GetxController {
     const url = 'https://api.xendit.co/v2/invoices';
     var headers = {
       'Content-Type': 'application/json',
-      'Authorization': generateBasicAuthHeader(paymentModel.value.xendit!.apiKey!.toString()),
+      'Authorization': generateBasicAuthHeader(
+          paymentModel.value.xendit!.apiKey!.toString()),
       // 'Cookie': '__cf_bm=yERkrx3xDITyFGiou0bbKY1bi7xEwovHNwxV1vCNbVc-1724155511-1.0.1.1-jekyYQmPCwY6vIJ524K0V6_CEw6O.dAwOmQnHtwmaXO_MfTrdnmZMka0KZvjukQgXu5B.K_6FJm47SGOPeWviQ',
     };
 
@@ -663,7 +729,8 @@ class IntercityPaymentOrderController extends GetxController {
     });
 
     try {
-      final response = await http.post(Uri.parse(url), headers: headers, body: body);
+      final response =
+          await http.post(Uri.parse(url), headers: headers, body: body);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         XenditModel model = XenditModel.fromJson(jsonDecode(response.body));
@@ -688,20 +755,22 @@ class IntercityPaymentOrderController extends GetxController {
   static String orderId = '';
   static String amount = '';
 
-  orangeMakePayment({required String amount, required BuildContext context}) async {
+  orangeMakePayment(
+      {required String amount, required BuildContext context}) async {
     reset();
     var id = Constant.getUuid();
-    var paymentURL = await fetchToken(context: context, orderId: id, amount: amount, currency: 'USD');
+    var paymentURL = await fetchToken(
+        context: context, orderId: id, amount: amount, currency: 'USD');
     ShowToastDialog.closeLoader();
     if (paymentURL.toString() != '') {
       Get.to(() => OrangeMoneyScreen(
-        initialURl: paymentURL,
-        accessToken: accessToken,
-        amount: amount,
-        orangePay: paymentModel.value.orangePay!,
-        orderId: orderId,
-        payToken: payToken,
-      ))!
+                initialURl: paymentURL,
+                accessToken: accessToken,
+                amount: amount,
+                orangePay: paymentModel.value.orangePay!,
+                orderId: orderId,
+                payToken: payToken,
+              ))!
           .then((value) {
         if (value == true) {
           ShowToastDialog.showToast("Payment Successful!!");
@@ -716,7 +785,11 @@ class IntercityPaymentOrderController extends GetxController {
     }
   }
 
-  Future fetchToken({required String orderId, required String currency, required BuildContext context, required String amount}) async {
+  Future fetchToken(
+      {required String orderId,
+      required String currency,
+      required BuildContext context,
+      required String amount}) async {
     String apiUrl = 'https://api.orange.com/oauth/v3/token';
     Map<String, String> requestBody = {
       'grant_type': 'client_credentials',
@@ -737,20 +810,30 @@ class IntercityPaymentOrderController extends GetxController {
 
       accessToken = responseData['access_token'];
       // ignore: use_build_context_synchronously
-      return await webpayment(context: context, amountData: amount, currency: currency, orderIdData: orderId);
+      return await webpayment(
+          context: context,
+          amountData: amount,
+          currency: currency,
+          orderIdData: orderId);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          backgroundColor: Color(0xff635bff),
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: const Color(0xff635bff),
           content: Text(
-            "Something went wrong, please contact admin.",
-            style: TextStyle(fontSize: 17),
-          )));
-
+            "Something went wrong".tr, // <--- usando tr
+            style: const TextStyle(fontSize: 17),
+          ),
+        ),
+      );
       return '';
     }
   }
 
-  Future webpayment({required String orderIdData, required BuildContext context, required String currency, required String amountData}) async {
+  Future webpayment(
+      {required String orderIdData,
+      required BuildContext context,
+      required String currency,
+      required String amountData}) async {
     orderId = orderIdData;
     amount = amountData;
     String apiUrl = paymentModel.value.orangePay!.isSandbox! == true
@@ -758,7 +841,8 @@ class IntercityPaymentOrderController extends GetxController {
         : 'https://api.orange.com/orange-money-webpay/cm/v1/webpayment';
     Map<String, String> requestBody = {
       "merchant_key": paymentModel.value.orangePay!.merchantKey ?? '',
-      "currency": paymentModel.value.orangePay!.isSandbox == true ? "OUV" : currency,
+      "currency":
+          paymentModel.value.orangePay!.isSandbox == true ? "OUV" : currency,
       "order_id": orderId,
       "amount": amount,
       "reference": 'Y-Note Test',
@@ -770,7 +854,11 @@ class IntercityPaymentOrderController extends GetxController {
 
     var response = await http.post(
       Uri.parse(apiUrl),
-      headers: <String, String>{'Authorization': 'Bearer $accessToken', 'Content-Type': 'application/json', 'Accept': 'application/json'},
+      headers: <String, String>{
+        'Authorization': 'Bearer $accessToken',
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
       body: json.encode(requestBody),
     );
 
@@ -802,13 +890,14 @@ class IntercityPaymentOrderController extends GetxController {
   }
 
   //Midtrans payment
-  midtransMakePayment({required String amount, required BuildContext context}) async {
+  midtransMakePayment(
+      {required String amount, required BuildContext context}) async {
     await createPaymentLink(amount: amount).then((url) {
       ShowToastDialog.closeLoader();
       if (url != '') {
         Get.to(() => MidtransScreen(
-          initialURl: url,
-        ))!
+                  initialURl: url,
+                ))!
             .then((value) {
           if (value == true) {
             ShowToastDialog.showToast("Payment Successful!!");
@@ -823,14 +912,17 @@ class IntercityPaymentOrderController extends GetxController {
 
   Future<String> createPaymentLink({required var amount}) async {
     var ordersId = Constant.getUuid();
-    final url = Uri.parse(paymentModel.value.midtrans!.isSandbox == true ? 'https://api.sandbox.midtrans.com/v1/payment-links' : 'https://api.midtrans.com/v1/payment-links');
+    final url = Uri.parse(paymentModel.value.midtrans!.isSandbox == true
+        ? 'https://api.sandbox.midtrans.com/v1/payment-links'
+        : 'https://api.midtrans.com/v1/payment-links');
 
     final response = await http.post(
       url,
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
-        'Authorization': generateBasicAuthHeader(paymentModel.value.midtrans!.serverKey!),
+        'Authorization':
+            generateBasicAuthHeader(paymentModel.value.midtrans!.serverKey!),
       },
       body: jsonEncode({
         'transaction_details': {
@@ -838,7 +930,9 @@ class IntercityPaymentOrderController extends GetxController {
           'gross_amount': double.parse(amount.toString()).toInt(),
         },
         'usage_limit': 2,
-        "callbacks": {"finish": "https://www.google.com?merchant_order_id=$ordersId"},
+        "callbacks": {
+          "finish": "https://www.google.com?merchant_order_id=$ordersId"
+        },
       }),
     );
 
@@ -846,7 +940,8 @@ class IntercityPaymentOrderController extends GetxController {
       final responseData = jsonDecode(response.body);
       return responseData['payment_url'];
     } else {
-      ShowToastDialog.showToast("something went wrong, please contact admin.");
+      ShowToastDialog.showToast(
+          "something went wrong, please contact admin.".tr);
       return '';
     }
   }

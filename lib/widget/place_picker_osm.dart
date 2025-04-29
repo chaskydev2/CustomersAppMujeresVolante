@@ -4,9 +4,8 @@ import 'package:customer/utils/DarkThemeProvider.dart';
 import 'package:customer/utils/utils.dart';
 import 'package:customer/widget/osm_map_search_place.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart'; // Importa Google Maps
 import 'package:get/get.dart';
-//import 'package:osm_nominatim/osm_nominatim.dart';
 import 'package:provider/provider.dart';
 
 import '../model/palce_model.dart';
@@ -19,110 +18,88 @@ class LocationPicker extends StatefulWidget {
 }
 
 class _LocationPickerState extends State<LocationPicker> {
-  GeoPoint? selectedLocation;
-  late MapController mapController;
+  LatLng? selectedLocation;
+  late GoogleMapController mapController;
   Place? place;
+
   TextEditingController textController = TextEditingController();
-  List<GeoPoint> _markers = [];
+  Set<Marker> _markers = {}; // Utilizamos un conjunto de marcadores
 
   final GoogleGeocodingService geocodingService =
       GoogleGeocodingService(apiKey: 'AIzaSyBF8F0YnhknJa_cvyMmaJvRVTqPS-somdk');
 
+  CameraPosition? _currentCameraPosition;
+
+  SearchInfo? places;
+
   @override
   void initState() {
     super.initState();
-    mapController = MapController(
-      initMapWithUserPosition:
-          const UserTrackingOption(enableTracking: false, unFollowUser: true),
-    );
   }
 
-  _listerTapPosition() async {
-    mapController.listenerMapSingleTapping.addListener(() async {
-      if (mapController.listenerMapSingleTapping.value != null) {
-        GeoPoint position = mapController.listenerMapSingleTapping.value!;
-        addMarker(position);
+  _listerTapPosition(lt, lg) async {
+    try {
+      final placeResult = await geocodingService.reverseGeocode(
+        lt,
+        lg,
+      );
 
-        try {
-          final placeResult = await geocodingService.reverseGeocode(
-            position.latitude,
-            position.longitude,
-          );
-
-          if (placeResult != null) {
-            setState(() {
-              place = placeResult;
-            });
-          } else {
-            print('No se pudo obtener información del lugar.');
-          }
-        } catch (e) {
-          print('Error en reverseGeocode: $e');
-        }
-      }
-    });
-  }
-
-  addMarker(GeoPoint? position) async {
-    if (position != null) {
-      for (var marker in _markers) {
-        await mapController.removeMarker(marker);
-      }
-      if (mounted) {
+      if (placeResult != null) {
         setState(() {
-          _markers.clear();
+          place = placeResult;
         });
+      } else {
+        print('No se pudo obtener información del lugar.');
       }
-      WidgetsBinding.instance.addPostFrameCallback((_) async {
-        if (mounted) {
-          await mapController
-              .addMarker(position,
-                  markerIcon: const MarkerIcon(
-                    icon: Icon(Icons.location_on, size: 26),
-                  ))
-              .then((v) {
-            if (mounted) {
-              setState(() {
-                _markers.add(position);
-              });
-            }
-          });
+    } catch (e) {
+      print('Error en reverseGeocode: $e');
+    }
+  }
 
-          try {
-            final placeResult = await geocodingService.reverseGeocode(
-              position.latitude,
-              position.longitude,
-            );
+  addMarker(LatLng position) async {
+    // Agregar marcador en la nueva ubicación
+    setState(() {
+      _markers.clear(); // Limpiar los marcadores anteriores
+      _markers.add(Marker(
+        markerId: MarkerId('selected_location'),
+        position: position,
+        icon: BitmapDescriptor
+            .defaultMarker, // Puedes cambiar el ícono si lo deseas
+      ));
+    });
 
-            if (placeResult != null && mounted) {
-              setState(() {
-                place = placeResult;
-              });
-            } else {
-              print('No se pudo obtener información del lugar.');
-            }
-          } catch (e) {
-            print('Error en reverseGeocode: $e');
-          }
-        }
-      });
+    // Geocodificación inversa
+
+    try {
+      final placeResult = await geocodingService.reverseGeocode(
+        position.latitude,
+        position.longitude,
+      );
+
+      if (placeResult != null) {
+        setState(() {
+          place = placeResult;
+        });
+      } else {
+        print('No se pudo obtener información del lugar.');
+      }
+    } catch (e) {
+      print('Error en reverseGeocode: $e');
     }
   }
 
   Future<void> _setUserLocation() async {
     try {
       final locationData = await Utils.getCurrentLocation();
-      final selected = GeoPoint(
-        latitude: locationData.latitude,
-        longitude: locationData.longitude,
-      );
+      final selected = LatLng(locationData.latitude, locationData.longitude);
 
       setState(() {
         selectedLocation = selected;
       });
+      print("Selected Location: $selectedLocation");
 
       await addMarker(selected);
-      await mapController.moveTo(selected, animate: true);
+      await mapController.animateCamera(CameraUpdate.newLatLng(selected));
 
       try {
         final placeResult = await geocodingService.reverseGeocode(
@@ -142,7 +119,6 @@ class _LocationPickerState extends State<LocationPicker> {
       }
     } catch (e) {
       print("Error getting location: $e");
-      // Aquí podrías mostrar un mensaje de error al usuario, si deseas
     }
   }
 
@@ -161,25 +137,24 @@ class _LocationPickerState extends State<LocationPicker> {
       ),
       body: Stack(
         children: [
-          OSMFlutter(
-            controller: mapController,
-            mapIsLoading: const Center(child: CircularProgressIndicator()),
-            osmOption: OSMOption(
-              userLocationMarker: UserLocationMaker(
-                  personMarker: MarkerIcon(
-                      iconWidget: Image.asset("assets/images/pickup.png")),
-                  directionArrowMarker: MarkerIcon(
-                      iconWidget: Image.asset("assets/images/pickup.png"))),
-              isPicker: true,
-              zoomOption: const ZoomOption(initZoom: 14),
-            ),
-            onMapIsReady: (active) {
-              if (active) {
+          GoogleMap(
+              initialCameraPosition: CameraPosition(
+                target: selectedLocation ??
+                    LatLng(0.0,
+                        0.0), // Asegúrate de tener una ubicación predeterminada
+                zoom: 14,
+              ),
+              onMapCreated: (GoogleMapController controller) {
+                mapController = controller;
                 _setUserLocation();
-                _listerTapPosition();
-              }
-            },
-          ),
+              },
+              markers: _markers,
+              onTap: (LatLng position) {
+                addMarker(position);
+              },
+              onCameraMove: (CameraPosition position) {
+                _currentCameraPosition = position;
+              }),
           if (place?.displayName != null)
             Align(
               alignment: Alignment.bottomCenter,
@@ -231,11 +206,36 @@ class _LocationPickerState extends State<LocationPicker> {
                     onTap: () async {
                       Get.to(const OsmSearchPlacesApi())?.then((value) async {
                         if (value != null) {
-                          SearchInfo place = value;
+                          print("Search :: ${value.lat}");
+                          print("Search :: ${value.lon}");
+                          SearchInfo place = SearchInfo(
+                            address: value.displayName ?? '',
+                            point: LatLng(
+                              value.lat,
+                              value.lon,
+                            ),
+                          );
+
+                          print("SearchText :: ${place.address}");
+                          print("SearchTextPoint :: ${place.point}");
                           textController = TextEditingController(
-                              text: place.address.toString());
+                              text: place.address..toString());
                           await addMarker(place.point);
-                          print("Search :: ${place.point.toString()}");
+
+                          if (mapController != null) {
+                            _listerTapPosition(
+                                place.point.latitude, place.point.longitude);
+                            mapController.animateCamera(
+                              CameraUpdate.newCameraPosition(
+                                CameraPosition(
+                                  target: place.point,
+                                  zoom:
+                                      16, // Puedes ajustar el zoom como quieras
+                                ),
+                              ),
+                            );
+                          }
+                          // print("Search :: ${place.point.toString()}");
                         }
                       });
                     },
@@ -288,5 +288,32 @@ class _LocationPickerState extends State<LocationPicker> {
         ),
       ),
     );
+  }
+}
+
+class SearchInfo {
+  final String address; // Dirección del lugar
+  final LatLng point; // Coordenadas del lugar (latitud y longitud)
+
+  SearchInfo({required this.address, required this.point});
+
+  // Método para crear un objeto SearchInfo desde un JSON (útil si la búsqueda proviene de una API)
+  factory SearchInfo.fromJson(Map<String, dynamic> json) {
+    return SearchInfo(
+      address: json['address'] ?? '',
+      point: LatLng(
+        json['latitude'] ?? 0.0,
+        json['longitude'] ?? 0.0,
+      ),
+    );
+  }
+
+  // Método para convertir el objeto a un mapa (JSON), por si necesitas enviarlo o almacenarlo
+  Map<String, dynamic> toJson() {
+    return {
+      'address': address,
+      'latitude': point.latitude,
+      'longitude': point.longitude,
+    };
   }
 }

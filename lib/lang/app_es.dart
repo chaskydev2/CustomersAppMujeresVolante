@@ -102,6 +102,7 @@ const Map<String, String> esES = {
   'From': 'Desde',
   "Choose another contact": "Elegir otro contacto",
   "Book for ": "Reservar para ",
+  "Book for @name": "Reservar para @name",
   "Do you want to travel for AirPort?": "¿Quieres viajar al aeropuerto?",
   "Choose a single AirPort": "Elige un solo aeropuerto",
   "Book": "Reservar",
