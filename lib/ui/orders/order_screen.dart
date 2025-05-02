@@ -31,6 +31,17 @@ import 'package:share_plus/share_plus.dart';
 class OrderScreen extends StatelessWidget {
   const OrderScreen({super.key});
 
+  String getStatusInSpanish(String status) {
+    switch (status) {
+      case 'Ride Placed':
+        return 'Viaje solicitado';
+      case 'Ride Canceled':
+        return 'Viaje cancelado';
+      default:
+        return status;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final themeChange = Provider.of<DarkThemeProvider>(context);
@@ -127,14 +138,17 @@ class OrderScreen extends StatelessWidget {
                                                         .data!.docs[index]
                                                         .data()
                                                     as Map<String, dynamic>);
-
                                             return InkWell(
                                               onTap: () {
-                                                Get.to(
-                                                    const CompleteOrderScreen(),
-                                                    arguments: {
-                                                      "orderModel": orderModel,
-                                                    });
+                                                if (orderModel.status !=
+                                                    Constant.ridePlaced) {
+                                                  Get.to(
+                                                      const CompleteOrderScreen(),
+                                                      arguments: {
+                                                        "orderModel":
+                                                            orderModel,
+                                                      });
+                                                }
                                               },
                                               child: Padding(
                                                 padding:
@@ -195,9 +209,9 @@ class OrderScreen extends StatelessWidget {
                                                                 children: [
                                                                   Expanded(
                                                                     child: Text(
-                                                                      orderModel
+                                                                      getStatusInSpanish(orderModel
                                                                           .status
-                                                                          .toString(),
+                                                                          .toString()),
                                                                       style: GoogleFonts.poppins(
                                                                           fontWeight:
                                                                               FontWeight.w500),
@@ -368,7 +382,7 @@ class OrderScreen extends StatelessWidget {
                                                                       child: orderModel.status == Constant.rideInProgress ||
                                                                               orderModel.status == Constant.ridePlaced ||
                                                                               orderModel.status == Constant.rideComplete
-                                                                          ? Text(orderModel.status.toString())
+                                                                          ? Text("Viaje Solicitado".tr, style: GoogleFonts.poppins())
                                                                           : Row(
                                                                               children: [
                                                                                 Text("OTP".tr, style: GoogleFonts.poppins()),
@@ -877,7 +891,7 @@ class OrderScreen extends StatelessWidget {
                                                                       children: [
                                                                         Expanded(
                                                                             child:
-                                                                                Text(orderModel.status.toString(), style: GoogleFonts.poppins(fontWeight: FontWeight.w500))),
+                                                                                Text("Viaje Completado", style: GoogleFonts.poppins(fontWeight: FontWeight.w500))),
                                                                         Text(
                                                                             Constant().formatTimestamp(orderModel
                                                                                 .createdDate),

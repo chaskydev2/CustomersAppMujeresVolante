@@ -106,7 +106,7 @@ class LoginScreen extends StatelessWidget {
                                       ? AppColors.darkBackground
                                       : AppColors.background,
                                   initialSelection:
-                                      controller.countryCode.value,
+                                      '+591', // Código de país de Bolivia
                                   comparator: (a, b) =>
                                       b.name!.compareTo(a.name.toString()),
                                   flagDecoration: const BoxDecoration(

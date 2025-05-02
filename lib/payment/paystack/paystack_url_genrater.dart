@@ -8,7 +8,11 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 class PayStackURLGen {
-  static Future payStackURLGen({required String amount, required String secretKey, required String currency, required UserModel userModel}) async {
+  static Future payStackURLGen(
+      {required String amount,
+      required String secretKey,
+      required String currency,
+      required UserModel userModel}) async {
     const url = "https://api.paystack.co/transaction/initialize";
     final response = await http.post(Uri.parse(url), body: {
       "email": userModel.email,
@@ -50,13 +54,17 @@ class PayStackURLGen {
     //PayPalClientSettleModel.fromJson(data);
   }
 
-  static Future<String> getPayHTML({required String amount, required Payfast payFastSettingData, required UserModel userModel}) async {
-    String newUrl = 'https://${payFastSettingData.isSandbox == false ? "www" : "sandbox"}.payfast.co.za/eng/process';
+  static Future<String> getPayHTML(
+      {required String amount,
+      required Payfast payFastSettingData,
+      required UserModel userModel}) async {
+    String newUrl =
+        'https://${payFastSettingData.isSandbox == false ? "www" : "sandbox"}.payfast.co.za/eng/process';
     Map body = {
       'merchant_id': payFastSettingData.merchantId,
       'merchant_key': payFastSettingData.merchantKey,
       'amount': amount,
-      'item_name': "goRide online payment",
+      'item_name': "mujeres al volante online payment",
       'return_url': payFastSettingData.returnUrl,
       'cancel_url': payFastSettingData.cancelUrl,
       'notify_url': payFastSettingData.notifyUrl,

@@ -83,37 +83,75 @@ class CompleteOrderController extends GetxController {
     List<String> startParts = startNightTime.split(':');
     List<String> endParts = endNightTime.split(':');
 
-    startNightTimeString = DateTime(currentDate.year, currentDate.month, currentDate.day, int.parse(startParts[0]), int.parse(startParts[1]));
-    endNightTimeString = DateTime(currentDate.year, currentDate.month, currentDate.day, int.parse(endParts[0]), int.parse(endParts[1]));
+    startNightTimeString = DateTime(currentDate.year, currentDate.month,
+        currentDate.day, int.parse(startParts[0]), int.parse(startParts[1]));
+    endNightTimeString = DateTime(currentDate.year, currentDate.month,
+        currentDate.day, int.parse(endParts[0]), int.parse(endParts[1]));
 
-    double durationValueInMinutes = convertToMinutes(orderModel.value.duration.toString());
-    double distance = double.tryParse(orderModel.value.distance.toString()) ?? 0.0;
+    double durationValueInMinutes =
+        convertToMinutes(orderModel.value.duration.toString());
+    double distance =
+        double.tryParse(orderModel.value.distance.toString()) ?? 0.0;
     double nonAcChargeValue = 0.0;
     double acChargeValue = 0.0;
     double kmCharge = 0.0;
 
-    if (orderModel.value.driverId != null && orderModel.value.driverId!.isNotEmpty) {
-      nonAcChargeValue = double.tryParse(driverModel.value.vehicleInformation!.nonAcPerKmRate.toString()) ?? 0.0;
-      acChargeValue = double.tryParse(driverModel.value.vehicleInformation!.nonAcPerKmRate.toString()) ?? 0.0;
-      kmCharge = double.tryParse(driverModel.value.vehicleInformation!.perKmRate ?? '0.0') ?? 0.0;
+    if (orderModel.value.driverId != null &&
+        orderModel.value.driverId!.isNotEmpty) {
+      nonAcChargeValue = double.tryParse(driverModel
+              .value.vehicleInformation!.nonAcPerKmRate
+              .toString()) ??
+          0.0;
+      acChargeValue = double.tryParse(driverModel
+              .value.vehicleInformation!.nonAcPerKmRate
+              .toString()) ??
+          0.0;
+      kmCharge = double.tryParse(
+              driverModel.value.vehicleInformation!.perKmRate ?? '0.0') ??
+          0.0;
     } else {
-      nonAcChargeValue = double.tryParse(orderModel.value.service!.nonAcCharge.toString()) ?? 0.0;
-      acChargeValue = double.tryParse(orderModel.value.service!.acCharge.toString()) ?? 0.0;
-      kmCharge = double.tryParse(orderModel.value.service!.kmCharge ?? '0.0') ?? 0.0;
+      nonAcChargeValue =
+          double.tryParse(orderModel.value.service!.nonAcCharge.toString()) ??
+              0.0;
+      acChargeValue =
+          double.tryParse(orderModel.value.service!.acCharge.toString()) ?? 0.0;
+      kmCharge =
+          double.tryParse(orderModel.value.service!.kmCharge ?? '0.0') ?? 0.0;
     }
 
-    totalChargeOfMinute.value = double.parse(durationValueInMinutes.toString()) * double.parse(orderModel.value.service!.perMinuteCharge.toString());
-    basicFareCharge.value = double.parse(orderModel.value.service!.basicFareCharge.toString());
-    holdingCharge.value = double.parse(orderModel.value.totalHoldingCharges.toString());
-    if (distance <= double.parse(orderModel.value.service!.basicFare.toString())) {
-      if (currentTime.isAfter(startNightTimeString) && currentTime.isBefore(endNightTimeString)) {
-        amount.value = amount.value * double.parse(orderModel.value.service!.nightCharge.toString());
+    print("durationvalue minutes: $durationValueInMinutes");
+    print(
+        "Per Minute Charge: ${orderModel.value.service?.perMinuteCharge ?? 'No disponible'}");
+
+    double perMinuteCharge = double.tryParse(
+            orderModel.value.service?.perMinuteCharge?.toString() ?? '0') ??
+        0.0;
+
+    totalChargeOfMinute.value =
+        double.parse(durationValueInMinutes.toString()) *
+            double.parse(perMinuteCharge.toString());
+
+    basicFareCharge.value =
+        double.parse(orderModel.value.service!.basicFareCharge.toString());
+
+    holdingCharge.value =
+        double.parse(orderModel.value.totalHoldingCharges.toString());
+    if (distance <=
+        double.parse(orderModel.value.service!.basicFare.toString())) {
+      if (currentTime.isAfter(startNightTimeString) &&
+          currentTime.isBefore(endNightTimeString)) {
+        amount.value = amount.value *
+            double.parse(orderModel.value.service!.nightCharge.toString());
       } else {
-        amount.value = double.parse(orderModel.value.service!.basicFareCharge.toString());
+        amount.value =
+            double.parse(orderModel.value.service!.basicFareCharge.toString());
       }
     } else {
-      double distanceValue = double.tryParse(orderModel.value.distance.toString()) ?? 0.0;
-      double basicFareValue = double.tryParse(orderModel.value.service!.basicFare.toString()) ?? 0.0;
+      double distanceValue =
+          double.tryParse(orderModel.value.distance.toString()) ?? 0.0;
+      double basicFareValue =
+          double.tryParse(orderModel.value.service!.basicFare.toString()) ??
+              0.0;
       double extraDist = distanceValue - basicFareValue;
 
       double perKmCharge = orderModel.value.service!.isAcNonAc == true
@@ -123,25 +161,40 @@ class CompleteOrderController extends GetxController {
           : kmCharge;
       amount.value = (perKmCharge * extraDist);
 
-      if (currentTime.isAfter(startNightTimeString) && currentTime.isBefore(endNightTimeString)) {
-        totalChargeOfMinute.value = totalChargeOfMinute.value * double.parse(orderModel.value.service!.nightCharge.toString());
-        basicFareCharge.value = basicFareCharge.value * double.parse(orderModel.value.service!.nightCharge.toString());
-        holdingCharge.value = holdingCharge.value * double.parse(orderModel.value.service!.nightCharge.toString());
+      if (currentTime.isAfter(startNightTimeString) &&
+          currentTime.isBefore(endNightTimeString)) {
+        totalChargeOfMinute.value = totalChargeOfMinute.value *
+            double.parse(orderModel.value.service!.nightCharge.toString());
+        basicFareCharge.value = basicFareCharge.value *
+            double.parse(orderModel.value.service!.nightCharge.toString());
+        holdingCharge.value = holdingCharge.value *
+            double.parse(orderModel.value.service!.nightCharge.toString());
       }
     }
 
-    if (orderModel.value.finalRate != null && orderModel.value.finalRate != '0.0') {
-      amount.value = double.parse(orderModel.value.finalRate.toString()) - basicFareCharge.value - totalChargeOfMinute.value;
+    if (orderModel.value.finalRate != null &&
+        orderModel.value.finalRate != '0.0') {
+      amount.value = double.parse(orderModel.value.finalRate.toString()) -
+          basicFareCharge.value -
+          totalChargeOfMinute.value;
     } else {
-      amount.value = amount.value * double.parse(orderModel.value.service!.nightCharge.toString());
+      amount.value = amount.value *
+          double.parse(orderModel.value.service!.nightCharge.toString());
     }
 
-    subTotal.value = amount.value + basicFareCharge.value + totalChargeOfMinute.value + holdingCharge.value;
+    subTotal.value = amount.value +
+        basicFareCharge.value +
+        totalChargeOfMinute.value +
+        holdingCharge.value;
 
     if (orderModel.value.taxList != null) {
       for (var element in orderModel.value.taxList!) {
         taxAmount.value = taxAmount.value +
-            Constant().calculateTax(amount: (double.parse(subTotal.value.toString()) - double.parse(couponAmount.value.toString())).toString(), taxModel: element);
+            Constant().calculateTax(
+                amount: (double.parse(subTotal.value.toString()) -
+                        double.parse(couponAmount.value.toString()))
+                    .toString(),
+                taxModel: element);
       }
     }
     total.value = subTotal.value + taxAmount.value;
@@ -157,7 +210,12 @@ class CompleteOrderController extends GetxController {
           if (orderModel.value.coupon!.type == "fix") {
             couponAmount.value = orderModel.value.coupon!.amount.toString();
           } else {
-            couponAmount.value = ((double.parse(orderModel.value.finalRate.toString()) * double.parse(orderModel.value.coupon!.amount.toString())) / 100).toString();
+            couponAmount.value =
+                ((double.parse(orderModel.value.finalRate.toString()) *
+                            double.parse(
+                                orderModel.value.coupon!.amount.toString())) /
+                        100)
+                    .toString();
           }
         }
       }

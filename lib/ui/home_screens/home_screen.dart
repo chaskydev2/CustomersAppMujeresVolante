@@ -278,7 +278,7 @@ class HomeScreen extends StatelessWidget {
                                             child: TextFieldThem.buildTextFiled(
                                                 context,
                                                 hintText:
-                                                    'Enter Your Current Location'
+                                                    'Ingresa la ubicación de origen'
                                                         .tr,
                                                 controller: controller
                                                     .sourceLocationController
@@ -393,8 +393,8 @@ class HomeScreen extends StatelessWidget {
                                                                       : null,
                                                                   initialPosition:
                                                                       const LatLng(
-                                                                          -33.8567844,
-                                                                          151.213108),
+                                                                          -17.393814,
+                                                                          -66.157043),
                                                                   useCurrentLocation:
                                                                       true,
                                                                   autocompleteComponents: Constant.regionCode !=
@@ -781,9 +781,7 @@ class HomeScreen extends StatelessWidget {
                                                                   text:
                                                                       TextSpan(
                                                                     text:
-                                                                        // 'Recommended Price is ${Constant.amountShow(amount: 23.0)}. Approx time ${controller.duration}. Approx distance ${double.parse(controller.distance.value).toStringAsFixed(Constant.currencyModel!.decimalDigits!)} ${Constant.distanceType}'
-
-                                                                        'Precio recomendado es 23.0. Tiempo aproximado 30 minutos. Distancia aproximada 15.50 km.',
+                                                                        'Tu precio es estimado es ${Constant.amountShow(amount: controller.amount.value)}. tiempo aproximado es ${controller.duration}. distancia aproximada es ${double.parse(controller.distance.value).toStringAsFixed(Constant.currencyModel!.decimalDigits!)} ${Constant.distanceType}',
                                                                     style: GoogleFonts.poppins(
                                                                         color: const Color
                                                                             .fromARGB(
@@ -795,7 +793,7 @@ class HomeScreen extends StatelessWidget {
                                                                 )
                                                               : RichText(
                                                                   text: TextSpan(
-                                                                      text: 'Your Price is ${Constant.amountShow(amount: controller.amount.value)}. Approx time ${controller.duration}. Approx distance ${double.parse(controller.distance.value).toStringAsFixed(Constant.currencyModel!.decimalDigits!)} ${Constant.distanceType}'
+                                                                      text: 'Tu precio es estimado es ${Constant.amountShow(amount: controller.amount.value)}. tiempo aproximado es ${controller.duration}. distancia aproximada es ${double.parse(controller.distance.value).toStringAsFixed(Constant.currencyModel!.decimalDigits!)} ${Constant.distanceType}'
                                                                           .tr,
                                                                       style: GoogleFonts.poppins(
                                                                           color: const Color
@@ -994,7 +992,7 @@ class HomeScreen extends StatelessWidget {
                                     ),
                                     ButtonThem.buildButton(
                                       context,
-                                      title: "Book Ride".tr,
+                                      title: "Hacer Pedido".tr,
                                       btnWidthRatio:
                                           Responsive.width(100, context),
                                       onPress: () async {
@@ -2647,7 +2645,7 @@ class HomeScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "Someone else taking this ride?",
+                          "Otra persona tomará este viaje?",
                           style: GoogleFonts.poppins(
                               fontSize: 16, fontWeight: FontWeight.w600),
                         ),

@@ -1,9 +1,9 @@
 // TODO Implement this library.
 const Map<String, String> esES = {
-  'GoRide': 'GoRide',
+  'GoRide': 'Mujeres al Volante',
   "Sign up": "Registrarse",
   "Create your account to start using GoRide":
-      "Crea tu cuenta para comenzar a usar GoRide",
+      "Crea tu cuenta para comenzar a usar Mujeres al Volante",
   "Full name": "Nombre completo",
   "Phone number": "Número de teléfono",
   "Email": "Correo electrónico",
@@ -187,14 +187,14 @@ const Map<String, String> esES = {
   "Earn": "Gana",
   "each": "cada uno",
   "Invite GoRide to sign up using your link and you’ll get":
-      "Invita a GoRide a registrarse usando tu enlace y recibirás",
+      "Invita a Mujeres al Volante a registrarse usando tu enlace y recibirás",
   "Invite a Friend": "Invita a un amigo",
   "They register": "Ellos se registran",
   "Get Reward to complete first order":
       "Obtén recompensa al completar el primer pedido",
   "REFER FRIEND": "REFERIR AMIGO",
   'Hey there, thanks for choosing GoRide. Hope you love our product. If you do, share it with your friends using code and get.':
-      'Hola, gracias por elegir GoRide. Esperamos que te encante nuestro producto. Si es así, compártelo con tus amigos usando el código y recibe.',
+      'Hola, gracias por elegir Mujeres al Volante. Esperamos que te encante nuestro producto. Si es así, compártelo con tus amigos usando el código y recibe.',
   'Rate for': 'Calificar para',
   'Comment..': 'Comentario..',
   "Review submit successfully": "Reseña enviada con éxito",

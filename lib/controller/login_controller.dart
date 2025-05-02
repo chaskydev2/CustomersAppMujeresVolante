@@ -12,7 +12,7 @@ import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 class LoginController extends GetxController {
   Rx<TextEditingController> phoneNumberController = TextEditingController().obs;
-  RxString countryCode = "+1".obs;
+  RxString countryCode = "+591".obs;
 
   Rx<GlobalKey<FormState>> formKey = GlobalKey<FormState>().obs;
 

@@ -55,7 +55,7 @@ class WalletController extends GetxController {
 
         Stripe.publishableKey =
             paymentModel.value.strip!.clientpublishableKey.toString();
-        Stripe.merchantIdentifier = 'GoRide';
+        Stripe.merchantIdentifier = 'mujeres al volante';
         Stripe.instance.applySettings();
         setRef();
 
@@ -138,7 +138,7 @@ class WalletController extends GetxController {
                     primary: AppColors.primary,
                   ),
                 ),
-                merchantDisplayName: 'GoRide'));
+                merchantDisplayName: 'mujeres al volante'));
         displayStripePaymentSheet(amount: amount);
       }
     } catch (e, s) {
@@ -543,7 +543,7 @@ class WalletController extends GetxController {
     var options = {
       'key': paymentModel.value.razorpay!.razorpayKey,
       'amount': amount * 100,
-      'name': 'GoRide',
+      'name': 'mujeres al volante',
       'order_id': orderId,
       "currency": "INR",
       'description': 'wallet Topup',

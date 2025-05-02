@@ -69,7 +69,7 @@ class IntercityPaymentOrderController extends GetxController {
 
         Stripe.publishableKey =
             paymentModel.value.strip!.clientpublishableKey.toString();
-        Stripe.merchantIdentifier = 'GoRide';
+        Stripe.merchantIdentifier = 'mujeres al volante';
         Stripe.instance.applySettings();
         setRef();
         selectedPaymentMethod.value = orderModel.value.paymentType.toString();
@@ -170,7 +170,7 @@ class IntercityPaymentOrderController extends GetxController {
     await FireStoreUtils.setInterCityOrder(orderModel.value).then((value) {
       if (value == true) {
         ShowToastDialog.closeLoader();
-        ShowToastDialog.showToast("Ride Complete successfully");
+        ShowToastDialog.showToast("Viaje Completado con exito");
       }
     });
   }
@@ -244,7 +244,7 @@ class IntercityPaymentOrderController extends GetxController {
                     primary: AppColors.primary,
                   ),
                 ),
-                merchantDisplayName: 'GoRide'));
+                merchantDisplayName: 'mujeres al volante'));
         displayStripePaymentSheet(amount: amount);
       }
     } catch (e, s) {
@@ -647,7 +647,7 @@ class IntercityPaymentOrderController extends GetxController {
     var options = {
       'key': paymentModel.value.razorpay!.razorpayKey,
       'amount': amount * 100,
-      'name': 'GoRide',
+      'name': 'mujeres al volante',
       'order_id': orderId,
       "currency": "INR",
       'description': 'wallet Topup',

@@ -31,7 +31,11 @@ class ReferralScreen extends StatelessWidget {
                       Expanded(
                         child: Container(
                           width: Responsive.width(100, context),
-                          decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/ic_referral_bg.png'), fit: BoxFit.fill)),
+                          decoration: const BoxDecoration(
+                              image: DecorationImage(
+                                  image: AssetImage(
+                                      'assets/images/ic_referral_bg.png'),
+                                  fit: BoxFit.fill)),
                           child: Padding(
                             padding: const EdgeInsets.all(40.0),
                             child: Padding(
@@ -48,21 +52,34 @@ class ReferralScreen extends StatelessWidget {
                         offset: const Offset(0, -30),
                         child: Container(
                           decoration: BoxDecoration(
-                            color: themeChange.getThem() ? AppColors.darkInvite : AppColors.background,
-                            borderRadius: const BorderRadius.all(Radius.circular(10)),
+                            color: themeChange.getThem()
+                                ? AppColors.darkInvite
+                                : AppColors.background,
+                            borderRadius:
+                                const BorderRadius.all(Radius.circular(10)),
                           ),
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 10),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 40, vertical: 10),
                             child: Column(
                               children: [
                                 Text(
                                   "Invite Friend & Businesses".tr,
-                                  style: GoogleFonts.poppins(color: themeChange.getThem() ? Colors.white : Colors.black),
+                                  style: GoogleFonts.poppins(
+                                      color: themeChange.getThem()
+                                          ? Colors.white
+                                          : Colors.black),
                                 ),
                                 Text(
-                                  "Earn ${Constant.amountShow(amount: Constant.referralAmount.toString())} each".tr,
+                                  "Earn ${Constant.amountShow(amount: Constant.referralAmount.toString())} each"
+                                      .tr,
                                   textAlign: TextAlign.center,
-                                  style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: themeChange.getThem() ? Colors.white : Colors.black, fontSize: 22),
+                                  style: GoogleFonts.poppins(
+                                      fontWeight: FontWeight.w600,
+                                      color: themeChange.getThem()
+                                          ? Colors.white
+                                          : Colors.black,
+                                      fontSize: 22),
                                 ),
                               ],
                             ),
@@ -84,22 +101,32 @@ class ReferralScreen extends StatelessWidget {
                                   children: [
                                     Text(
                                       "Invite Friend & Businesses".tr,
-                                      style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 20),
+                                      style: GoogleFonts.poppins(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 20),
                                     ),
                                     const SizedBox(
                                       height: 5,
                                     ),
                                     Text(
-                                      "Invite GoRide to sign up using your link and you’ll get ${Constant.amountShow(amount: Constant.referralAmount.toString())}  ".tr,
-                                      style: GoogleFonts.poppins(fontWeight: FontWeight.w200),
+                                      "Invita a Mujeres a registrarse usando tu enlace y recibirás una recompensa. ${Constant.amountShow(amount: Constant.referralAmount.toString())}  "
+                                          .tr,
+                                      style: GoogleFonts.poppins(
+                                          fontWeight: FontWeight.w200),
                                     ),
                                     const SizedBox(
                                       height: 30,
                                     ),
                                     InkWell(
                                       onTap: () {
-                                        FlutterClipboard.copy(controller.referralModel.value.referralCode.toString()).then((value) {
-                                          ShowToastDialog.showToast("Coupon code copied".tr);
+                                        FlutterClipboard.copy(controller
+                                                .referralModel
+                                                .value
+                                                .referralCode
+                                                .toString())
+                                            .then((value) {
+                                          ShowToastDialog.showToast(
+                                              "Coupon code copied".tr);
                                         });
                                       },
                                       child: DottedBorder(
@@ -108,15 +135,23 @@ class ReferralScreen extends StatelessWidget {
                                         dashPattern: const [6, 6, 6, 6],
                                         color: AppColors.textFieldBorder,
                                         child: Padding(
-                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 10, vertical: 10),
                                           child: Row(
                                             children: [
                                               Expanded(
                                                   child: Text(
-                                                controller.referralModel.value.referralCode.toString(),
-                                                style: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                                                controller.referralModel.value
+                                                    .referralCode
+                                                    .toString(),
+                                                style: GoogleFonts.poppins(
+                                                    fontWeight:
+                                                        FontWeight.w700),
                                               )),
-                                              Text("Tap to Copy".tr, style: GoogleFonts.poppins(fontWeight: FontWeight.w200))
+                                              Text("Tap to Copy".tr,
+                                                  style: GoogleFonts.poppins(
+                                                      fontWeight:
+                                                          FontWeight.w200))
                                             ],
                                           ),
                                         ),
@@ -129,27 +164,37 @@ class ReferralScreen extends StatelessWidget {
                                       children: [
                                         Container(
                                           decoration: BoxDecoration(
-                                            color: themeChange.getThem() ? AppColors.darkInvite : AppColors.background,
-                                            borderRadius: BorderRadius.circular(40),
+                                            color: themeChange.getThem()
+                                                ? AppColors.darkInvite
+                                                : AppColors.background,
+                                            borderRadius:
+                                                BorderRadius.circular(40),
                                             boxShadow: themeChange.getThem()
                                                 ? null
                                                 : [
                                                     BoxShadow(
-                                                      color: Colors.black.withOpacity(0.10),
+                                                      color: Colors.black
+                                                          .withOpacity(0.10),
                                                       blurRadius: 5,
-                                                      offset: const Offset(0, 4), // changes position of shadow
+                                                      offset: const Offset(0,
+                                                          4), // changes position of shadow
                                                     ),
                                                   ],
                                           ),
                                           child: Padding(
                                             padding: const EdgeInsets.all(10.0),
-                                            child: SvgPicture.asset('assets/icons/ic_invite.svg', width: 22, color: themeChange.getThem() ? Colors.white : Colors.black),
+                                            child: SvgPicture.asset(
+                                                'assets/icons/ic_invite.svg',
+                                                width: 22,
+                                                color: themeChange.getThem()
+                                                    ? Colors.white
+                                                    : Colors.black),
                                           ),
                                         ),
                                         const SizedBox(
                                           width: 10,
                                         ),
-                                         Text("Invite a Friend".tr)
+                                        Text("Invite a Friend".tr)
                                       ],
                                     ),
                                     const SizedBox(
@@ -159,27 +204,37 @@ class ReferralScreen extends StatelessWidget {
                                       children: [
                                         Container(
                                           decoration: BoxDecoration(
-                                            color: themeChange.getThem() ? AppColors.darkInvite : AppColors.background,
-                                            borderRadius: BorderRadius.circular(40),
+                                            color: themeChange.getThem()
+                                                ? AppColors.darkInvite
+                                                : AppColors.background,
+                                            borderRadius:
+                                                BorderRadius.circular(40),
                                             boxShadow: themeChange.getThem()
                                                 ? null
                                                 : [
                                                     BoxShadow(
-                                                      color: Colors.black.withOpacity(0.10),
+                                                      color: Colors.black
+                                                          .withOpacity(0.10),
                                                       blurRadius: 5,
-                                                      offset: const Offset(0, 4), // changes position of shadow
+                                                      offset: const Offset(0,
+                                                          4), // changes position of shadow
                                                     ),
                                                   ],
                                           ),
                                           child: Padding(
                                             padding: const EdgeInsets.all(10.0),
-                                            child: SvgPicture.asset('assets/icons/ic_register.svg', width: 22, color: themeChange.getThem() ? Colors.white : Colors.black),
+                                            child: SvgPicture.asset(
+                                                'assets/icons/ic_register.svg',
+                                                width: 22,
+                                                color: themeChange.getThem()
+                                                    ? Colors.white
+                                                    : Colors.black),
                                           ),
                                         ),
                                         const SizedBox(
                                           width: 10,
                                         ),
-                                         Text("They register".tr)
+                                        Text("They register".tr)
                                       ],
                                     ),
                                     const SizedBox(
@@ -189,38 +244,53 @@ class ReferralScreen extends StatelessWidget {
                                       children: [
                                         Container(
                                           decoration: BoxDecoration(
-                                            color: themeChange.getThem() ? AppColors.darkInvite : AppColors.background,
-                                            borderRadius: BorderRadius.circular(40),
+                                            color: themeChange.getThem()
+                                                ? AppColors.darkInvite
+                                                : AppColors.background,
+                                            borderRadius:
+                                                BorderRadius.circular(40),
                                             boxShadow: themeChange.getThem()
                                                 ? null
                                                 : [
                                                     BoxShadow(
-                                                      color: Colors.black.withOpacity(0.10),
+                                                      color: Colors.black
+                                                          .withOpacity(0.10),
                                                       blurRadius: 5,
-                                                      offset: const Offset(0, 4), // changes position of shadow
+                                                      offset: const Offset(0,
+                                                          4), // changes position of shadow
                                                     ),
                                                   ],
                                           ),
                                           child: Padding(
                                             padding: const EdgeInsets.all(10.0),
-                                            child: SvgPicture.asset('assets/icons/ic_invite.svg', width: 22, color: themeChange.getThem() ? Colors.white : Colors.black),
+                                            child: SvgPicture.asset(
+                                                'assets/icons/ic_invite.svg',
+                                                width: 22,
+                                                color: themeChange.getThem()
+                                                    ? Colors.white
+                                                    : Colors.black),
                                           ),
                                         ),
                                         const SizedBox(
                                           width: 10,
                                         ),
-                                         Text("Get Reward to complete first order".tr)
+                                        Text(
+                                            "Get Reward to complete first order"
+                                                .tr)
                                       ],
                                     ),
                                   ],
                                 ),
-                                SizedBox(height: 30,),
+                                SizedBox(
+                                  height: 30,
+                                ),
                                 ButtonThem.buildButton(
                                   context,
                                   title: "REFER FRIEND".tr,
                                   btnWidthRatio: Responsive.width(100, context),
                                   onPress: () async {
-                                    ShowToastDialog.showLoader("Please wait".tr);
+                                    ShowToastDialog.showLoader(
+                                        "Por favor  Espere".tr);
                                     share(controller);
                                   },
                                 ),
@@ -241,8 +311,9 @@ class ReferralScreen extends StatelessWidget {
   Future<void> share(ReferralController controller) async {
     ShowToastDialog.closeLoader();
     await Share.share(
-      subject: 'GoRide'.tr,
-     'Hey there, thanks for choosing GoRide. Hope you love our product. If you do, share it with your friends using code ${controller.referralModel.value.referralCode.toString()} and get ${Constant.amountShow(amount: Constant.referralAmount)}.'.tr,
+      subject: 'Mujeres al Volante'.tr,
+      'Hola, gracias por elegir Mujeres al Volante. Esperamos que te encante nuestro producto. Si es así, compártelo con tus amigos usando el código. ${controller.referralModel.value.referralCode.toString()} and get ${Constant.amountShow(amount: Constant.referralAmount)}.'
+          .tr,
     );
   }
 }

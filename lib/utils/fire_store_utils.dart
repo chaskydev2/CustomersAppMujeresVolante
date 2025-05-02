@@ -1051,7 +1051,7 @@ class FireStoreUtils {
   }
 
   static Future<bool> paymentStatusCheck() async {
-    ShowToastDialog.showLoader("Please wait");
+    ShowToastDialog.showLoader("Por favor espere");
     bool isFirst = false;
     await fireStore
         .collection(CollectionName.orders)
@@ -1071,7 +1071,7 @@ class FireStoreUtils {
   }
 
   static Future<bool> paymentStatusCheckIntercity() async {
-    ShowToastDialog.showLoader("Please wait");
+    ShowToastDialog.showLoader("Por favor espere");
     bool isFirst = false;
     await fireStore
         .collection(CollectionName.ordersIntercity)

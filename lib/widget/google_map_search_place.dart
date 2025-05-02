@@ -189,7 +189,7 @@ class GoogleMapSearchPlacesApiState extends State<GoogleMapSearchPlacesApi> {
                 itemBuilder: (context, index) {
                   return GestureDetector(
                     onTap: () async {
-                      ShowToastDialog.showLoader("Please wait");
+                      ShowToastDialog.showLoader("Please wait".tr);
                       await getLatLang(_placeList[index]["place_id"])
                           .then((value) {
                         if (value != null) {
