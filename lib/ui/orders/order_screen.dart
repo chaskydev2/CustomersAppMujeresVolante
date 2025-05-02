@@ -31,6 +31,17 @@ import 'package:share_plus/share_plus.dart';
 class OrderScreen extends StatelessWidget {
   const OrderScreen({super.key});
 
+  String getStatusInSpanish(String status) {
+    switch (status) {
+      case 'Ride Placed':
+        return 'Viaje solicitado';
+      case 'Ride Canceled':
+        return 'Viaje cancelado';
+      default:
+        return status;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final themeChange = Provider.of<DarkThemeProvider>(context);
@@ -46,7 +57,10 @@ class OrderScreen extends StatelessWidget {
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.background, borderRadius: const BorderRadius.only(topLeft: Radius.circular(25), topRight: Radius.circular(25))),
+                  color: Theme.of(context).colorScheme.background,
+                  borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(25),
+                      topRight: Radius.circular(25))),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 10),
                 child: Padding(
@@ -85,7 +99,9 @@ class OrderScreen extends StatelessWidget {
                               StreamBuilder<QuerySnapshot>(
                                 stream: FirebaseFirestore.instance
                                     .collection(CollectionName.orders)
-                                    .where("userId", isEqualTo: FireStoreUtils.getCurrentUid())
+                                    .where("userId",
+                                        isEqualTo:
+                                            FireStoreUtils.getCurrentUid())
                                     .where("status", whereIn: [
                                       Constant.ridePlaced,
                                       Constant.rideInProgress,
@@ -97,79 +113,144 @@ class OrderScreen extends StatelessWidget {
                                     .where("paymentStatus", isEqualTo: false)
                                     .orderBy("createdDate", descending: true)
                                     .snapshots(),
-                                builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+                                builder: (BuildContext context,
+                                    AsyncSnapshot<QuerySnapshot> snapshot) {
                                   if (snapshot.hasError) {
-                                    return Center(child: Text('Something went wrong'.tr));
+                                    return Center(
+                                        child: Text('Something went wrong'.tr));
                                   }
-                                  if (snapshot.connectionState == ConnectionState.waiting) {
+                                  if (snapshot.connectionState ==
+                                      ConnectionState.waiting) {
                                     return Constant.loader();
                                   }
                                   return snapshot.data!.docs.isEmpty
                                       ? Center(
-                                          child: Text("No active rides found".tr),
+                                          child:
+                                              Text("No active rides found".tr),
                                         )
                                       : ListView.builder(
                                           itemCount: snapshot.data!.docs.length,
                                           scrollDirection: Axis.vertical,
                                           shrinkWrap: true,
                                           itemBuilder: (context, index) {
-                                            OrderModel orderModel = OrderModel.fromJson(snapshot.data!.docs[index].data() as Map<String, dynamic>);
-
+                                            OrderModel orderModel =
+                                                OrderModel.fromJson(snapshot
+                                                        .data!.docs[index]
+                                                        .data()
+                                                    as Map<String, dynamic>);
                                             return InkWell(
                                               onTap: () {
-                                                Get.to(const CompleteOrderScreen(), arguments: {
-                                                  "orderModel": orderModel,
-                                                });
+                                                if (orderModel.status !=
+                                                    Constant.ridePlaced) {
+                                                  Get.to(
+                                                      const CompleteOrderScreen(),
+                                                      arguments: {
+                                                        "orderModel":
+                                                            orderModel,
+                                                      });
+                                                }
                                               },
                                               child: Padding(
-                                                padding: const EdgeInsets.all(10),
+                                                padding:
+                                                    const EdgeInsets.all(10),
                                                 child: Container(
                                                   decoration: BoxDecoration(
-                                                    color: themeChange.getThem() ? AppColors.darkContainerBackground : AppColors.containerBackground,
-                                                    borderRadius: const BorderRadius.all(Radius.circular(10)),
-                                                    border: Border.all(color: themeChange.getThem() ? AppColors.darkContainerBorder : AppColors.containerBorder, width: 0.5),
-                                                    boxShadow: themeChange.getThem()
-                                                        ? null
-                                                        : [
-                                                            BoxShadow(
-                                                              color: Colors.black.withOpacity(0.10),
-                                                              blurRadius: 5,
-                                                              offset: const Offset(0, 4), // changes position of shadow
-                                                            ),
-                                                          ],
+                                                    color: themeChange.getThem()
+                                                        ? AppColors
+                                                            .darkContainerBackground
+                                                        : AppColors
+                                                            .containerBackground,
+                                                    borderRadius:
+                                                        const BorderRadius.all(
+                                                            Radius.circular(
+                                                                10)),
+                                                    border: Border.all(
+                                                        color: themeChange
+                                                                .getThem()
+                                                            ? AppColors
+                                                                .darkContainerBorder
+                                                            : AppColors
+                                                                .containerBorder,
+                                                        width: 0.5),
+                                                    boxShadow:
+                                                        themeChange.getThem()
+                                                            ? null
+                                                            : [
+                                                                BoxShadow(
+                                                                  color: Colors
+                                                                      .black
+                                                                      .withOpacity(
+                                                                          0.10),
+                                                                  blurRadius: 5,
+                                                                  offset: const Offset(
+                                                                      0,
+                                                                      4), // changes position of shadow
+                                                                ),
+                                                              ],
                                                   ),
                                                   child: Padding(
-                                                    padding: const EdgeInsets.all(12.0),
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            12.0),
                                                     child: Column(
-                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
                                                       children: [
-                                                        orderModel.status == Constant.rideComplete || orderModel.status == Constant.rideActive
+                                                        orderModel.status ==
+                                                                    Constant
+                                                                        .rideComplete ||
+                                                                orderModel
+                                                                        .status ==
+                                                                    Constant
+                                                                        .rideActive
                                                             ? const SizedBox()
                                                             : Row(
                                                                 children: [
                                                                   Expanded(
                                                                     child: Text(
-                                                                      orderModel.status.toString(),
-                                                                      style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
+                                                                      getStatusInSpanish(orderModel
+                                                                          .status
+                                                                          .toString()),
+                                                                      style: GoogleFonts.poppins(
+                                                                          fontWeight:
+                                                                              FontWeight.w500),
                                                                     ),
                                                                   ),
                                                                   Text(
-                                                                    orderModel.status == Constant.ridePlaced
+                                                                    orderModel.status ==
+                                                                            Constant
+                                                                                .ridePlaced
                                                                         ? Constant.amountShow(
-                                                                            amount: double.parse(orderModel.offerRate.toString())
-                                                                                .toStringAsFixed(Constant.currencyModel!.decimalDigits!))
+                                                                            amount: double.parse(orderModel.offerRate.toString()).toStringAsFixed(Constant
+                                                                                .currencyModel!.decimalDigits!))
                                                                         : Constant.amountShow(
-                                                                            amount: double.parse(orderModel.finalRate.toString())
-                                                                                .toStringAsFixed(Constant.currencyModel!.decimalDigits!)),
-                                                                    style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                                                                            amount:
+                                                                                double.parse(orderModel.finalRate.toString()).toStringAsFixed(Constant.currencyModel!.decimalDigits!)),
+                                                                    style: GoogleFonts.poppins(
+                                                                        fontWeight:
+                                                                            FontWeight.bold),
                                                                   ),
                                                                 ],
                                                               ),
-                                                        orderModel.status == Constant.rideComplete || orderModel.status == Constant.rideActive
+                                                        orderModel.status ==
+                                                                    Constant
+                                                                        .rideComplete ||
+                                                                orderModel
+                                                                        .status ==
+                                                                    Constant
+                                                                        .rideActive
                                                             ? Padding(
-                                                                padding: const EdgeInsets.symmetric(vertical: 10),
-                                                                child: DriverView(
-                                                                  driverId: orderModel.driverId.toString(),
+                                                                padding:
+                                                                    const EdgeInsets
+                                                                        .symmetric(
+                                                                        vertical:
+                                                                            10),
+                                                                child:
+                                                                    DriverView(
+                                                                  driverId: orderModel
+                                                                      .driverId
+                                                                      .toString(),
                                                                 ),
                                                               )
                                                             : Container(),
@@ -177,70 +258,131 @@ class OrderScreen extends StatelessWidget {
                                                           height: 10,
                                                         ),
                                                         LocationView(
-                                                          sourceLocation: orderModel.sourceLocationName.toString(),
-                                                          destinationLocation: orderModel.destinationLocationName.toString(),
+                                                          sourceLocation: orderModel
+                                                              .sourceLocationName
+                                                              .toString(),
+                                                          destinationLocation:
+                                                              orderModel
+                                                                  .destinationLocationName
+                                                                  .toString(),
                                                         ),
                                                         const SizedBox(
                                                           height: 5,
                                                         ),
-                                                        orderModel.someOneElse != null
+                                                        orderModel.someOneElse !=
+                                                                null
                                                             ? Container(
                                                                 decoration: BoxDecoration(
-                                                                    color: themeChange.getThem() ? AppColors.darkGray : AppColors.gray,
-                                                                    borderRadius: const BorderRadius.all(Radius.circular(10))),
+                                                                    color: themeChange.getThem()
+                                                                        ? AppColors
+                                                                            .darkGray
+                                                                        : AppColors
+                                                                            .gray,
+                                                                    borderRadius:
+                                                                        const BorderRadius
+                                                                            .all(
+                                                                            Radius.circular(10))),
                                                                 child: Padding(
-                                                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                                                                    padding: const EdgeInsets
+                                                                        .symmetric(
+                                                                        horizontal:
+                                                                            10,
+                                                                        vertical:
+                                                                            10),
                                                                     child: Row(
-                                                                      mainAxisAlignment: MainAxisAlignment.center,
-                                                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                                                      mainAxisAlignment:
+                                                                          MainAxisAlignment
+                                                                              .center,
+                                                                      crossAxisAlignment:
+                                                                          CrossAxisAlignment
+                                                                              .center,
                                                                       children: [
                                                                         Expanded(
-                                                                          child: Row(
+                                                                          child:
+                                                                              Row(
                                                                             children: [
                                                                               Text(orderModel.someOneElse!.fullName.toString().tr, style: GoogleFonts.poppins()),
-                                                                              Text(orderModel.someOneElse!.contactNumber.toString().tr,
-                                                                                  style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 12)),
+                                                                              Text(orderModel.someOneElse!.contactNumber.toString().tr, style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 12)),
                                                                             ],
                                                                           ),
                                                                         ),
                                                                         InkWell(
-                                                                            onTap: () async {
+                                                                            onTap:
+                                                                                () async {
                                                                               await Share.share(
                                                                                 subject: 'Ride Booked'.tr,
-                                                                                'Your ride is booked. and you enjoy this ride and here is a otp to conform this ride ${orderModel.otp}'
-                                                                                    .tr,
+                                                                                'Your ride is booked. and you enjoy this ride and here is a otp to conform this ride ${orderModel.otp}'.tr,
                                                                               );
                                                                             },
-                                                                            child: const Icon(Icons.share))
+                                                                            child:
+                                                                                const Icon(Icons.share))
                                                                       ],
                                                                     )),
                                                               )
                                                             : const SizedBox(),
-                                                        if (orderModel.acceptHoldTime != null && orderModel.status == Constant.rideHoldAccepted)
+                                                        if (orderModel
+                                                                    .acceptHoldTime !=
+                                                                null &&
+                                                            orderModel.status ==
+                                                                Constant
+                                                                    .rideHoldAccepted)
                                                           HoldTimerWidget(
-                                                            acceptHoldTime: orderModel.acceptHoldTime!,
-                                                            holdingMinuteCharge: orderModel.service!.holdingMinuteCharge.toString(),
-                                                            holdingMinute: orderModel.service!.holdingMinute.toString(),
-                                                            orderId: orderModel.id!,
-                                                            orderModel: orderModel,
+                                                            acceptHoldTime:
+                                                                orderModel
+                                                                    .acceptHoldTime!,
+                                                            holdingMinuteCharge:
+                                                                orderModel
+                                                                    .service!
+                                                                    .holdingMinuteCharge
+                                                                    .toString(),
+                                                            holdingMinute:
+                                                                orderModel
+                                                                    .service!
+                                                                    .holdingMinute
+                                                                    .toString(),
+                                                            orderId:
+                                                                orderModel.id!,
+                                                            orderModel:
+                                                                orderModel,
                                                           ),
                                                         Padding(
-                                                          padding: const EdgeInsets.symmetric(vertical: 10),
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .symmetric(
+                                                                  vertical: 10),
                                                           child: Container(
                                                             decoration: BoxDecoration(
-                                                                color: themeChange.getThem() ? AppColors.darkGray : AppColors.gray,
-                                                                borderRadius: const BorderRadius.all(Radius.circular(10))),
+                                                                color: themeChange
+                                                                        .getThem()
+                                                                    ? AppColors
+                                                                        .darkGray
+                                                                    : AppColors
+                                                                        .gray,
+                                                                borderRadius:
+                                                                    const BorderRadius
+                                                                        .all(
+                                                                        Radius.circular(
+                                                                            10))),
                                                             child: Padding(
-                                                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                                                                padding: const EdgeInsets
+                                                                    .symmetric(
+                                                                    horizontal:
+                                                                        10,
+                                                                    vertical:
+                                                                        10),
                                                                 child: Row(
-                                                                  mainAxisAlignment: MainAxisAlignment.center,
-                                                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                                                  mainAxisAlignment:
+                                                                      MainAxisAlignment
+                                                                          .center,
+                                                                  crossAxisAlignment:
+                                                                      CrossAxisAlignment
+                                                                          .center,
                                                                   children: [
                                                                     Expanded(
                                                                       child: orderModel.status == Constant.rideInProgress ||
                                                                               orderModel.status == Constant.ridePlaced ||
                                                                               orderModel.status == Constant.rideComplete
-                                                                          ? Text(orderModel.status.toString())
+                                                                          ? Text("Viaje Solicitado".tr, style: GoogleFonts.poppins())
                                                                           : Row(
                                                                               children: [
                                                                                 Text("OTP".tr, style: GoogleFonts.poppins()),
@@ -248,51 +390,97 @@ class OrderScreen extends StatelessWidget {
                                                                               ],
                                                                             ),
                                                                     ),
-                                                                    Text(Constant().formatTimestamp(orderModel.createdDate), style: GoogleFonts.poppins(fontSize: 12)),
+                                                                    Text(
+                                                                        Constant().formatTimestamp(orderModel
+                                                                            .createdDate),
+                                                                        style: GoogleFonts.poppins(
+                                                                            fontSize:
+                                                                                12)),
                                                                   ],
                                                                 )),
                                                           ),
                                                         ),
                                                         Visibility(
-                                                            visible: orderModel.status == Constant.ridePlaced,
-                                                            child: ButtonThem.buildButton(
+                                                            visible: orderModel
+                                                                    .status ==
+                                                                Constant
+                                                                    .ridePlaced,
+                                                            child: ButtonThem
+                                                                .buildButton(
                                                               context,
-                                                              title: "View bids (${orderModel.acceptedDriverId != null ? orderModel.acceptedDriverId!.length.toString() : "0"})".tr,
+                                                              title:
+                                                                  "Ver ofertas (${orderModel.acceptedDriverId != null ? orderModel.acceptedDriverId!.length.toString() : "0"})"
+                                                                      .tr,
                                                               btnHeight: 44,
-                                                              onPress: () async {
-                                                                Get.to(const OrderDetailsScreen(), arguments: {
-                                                                  "orderModel": orderModel,
-                                                                });
+                                                              onPress:
+                                                                  () async {
+                                                                Get.to(
+                                                                    const OrderDetailsScreen(),
+                                                                    arguments: {
+                                                                      "orderModel":
+                                                                          orderModel,
+                                                                    });
                                                                 // paymentMethodDialog(context, controller, orderModel);
                                                               },
                                                             )),
                                                         Visibility(
-                                                            visible: orderModel.status != Constant.ridePlaced,
+                                                            visible: orderModel
+                                                                    .status !=
+                                                                Constant
+                                                                    .ridePlaced,
                                                             child: Row(
                                                               children: [
                                                                 Expanded(
-                                                                  child: InkWell(
-                                                                    onTap: () async {
-                                                                      UserModel? customer = await FireStoreUtils.getUserProfile(orderModel.userId.toString());
-                                                                      DriverUserModel? driver = await FireStoreUtils.getDriver(orderModel.driverId.toString());
+                                                                  child:
+                                                                      InkWell(
+                                                                    onTap:
+                                                                        () async {
+                                                                      UserModel?
+                                                                          customer =
+                                                                          await FireStoreUtils.getUserProfile(orderModel
+                                                                              .userId
+                                                                              .toString());
+                                                                      DriverUserModel?
+                                                                          driver =
+                                                                          await FireStoreUtils.getDriver(orderModel
+                                                                              .driverId
+                                                                              .toString());
 
-                                                                      Get.to(ChatScreens(
-                                                                        driverId: driver!.id,
-                                                                        customerId: customer!.id,
-                                                                        customerName: customer.fullName,
-                                                                        customerProfileImage: customer.profilePic,
-                                                                        driverName: driver.fullName,
-                                                                        driverProfileImage: driver.profilePic,
-                                                                        orderId: orderModel.id,
-                                                                        token: driver.fcmToken,
+                                                                      Get.to(
+                                                                          ChatScreens(
+                                                                        driverId:
+                                                                            driver!.id,
+                                                                        customerId:
+                                                                            customer!.id,
+                                                                        customerName:
+                                                                            customer.fullName,
+                                                                        customerProfileImage:
+                                                                            customer.profilePic,
+                                                                        driverName:
+                                                                            driver.fullName,
+                                                                        driverProfileImage:
+                                                                            driver.profilePic,
+                                                                        orderId:
+                                                                            orderModel.id,
+                                                                        token: driver
+                                                                            .fcmToken,
                                                                       ));
                                                                     },
-                                                                    child: Container(
-                                                                      height: 44,
+                                                                    child:
+                                                                        Container(
+                                                                      height:
+                                                                          44,
                                                                       decoration: BoxDecoration(
-                                                                          color: themeChange.getThem() ? AppColors.darkModePrimary : AppColors.primary,
+                                                                          color: themeChange.getThem()
+                                                                              ? AppColors.darkModePrimary
+                                                                              : AppColors.primary,
                                                                           borderRadius: BorderRadius.circular(5)),
-                                                                      child: Icon(Icons.chat, color: themeChange.getThem() ? Colors.black : Colors.white),
+                                                                      child: Icon(
+                                                                          Icons
+                                                                              .chat,
+                                                                          color: themeChange.getThem()
+                                                                              ? Colors.black
+                                                                              : Colors.white),
                                                                     ),
                                                                   ),
                                                                 ),
@@ -300,17 +488,33 @@ class OrderScreen extends StatelessWidget {
                                                                   width: 10,
                                                                 ),
                                                                 Expanded(
-                                                                  child: InkWell(
-                                                                    onTap: () async {
-                                                                      DriverUserModel? driver = await FireStoreUtils.getDriver(orderModel.driverId.toString());
-                                                                      Constant.makePhoneCall("${driver!.countryCode}${driver.phoneNumber}");
+                                                                  child:
+                                                                      InkWell(
+                                                                    onTap:
+                                                                        () async {
+                                                                      DriverUserModel?
+                                                                          driver =
+                                                                          await FireStoreUtils.getDriver(orderModel
+                                                                              .driverId
+                                                                              .toString());
+                                                                      Constant.makePhoneCall(
+                                                                          "${driver!.countryCode}${driver.phoneNumber}");
                                                                     },
-                                                                    child: Container(
-                                                                      height: 44,
+                                                                    child:
+                                                                        Container(
+                                                                      height:
+                                                                          44,
                                                                       decoration: BoxDecoration(
-                                                                          color: themeChange.getThem() ? AppColors.darkModePrimary : AppColors.primary,
+                                                                          color: themeChange.getThem()
+                                                                              ? AppColors.darkModePrimary
+                                                                              : AppColors.primary,
                                                                           borderRadius: BorderRadius.circular(5)),
-                                                                      child: Icon(Icons.call, color: themeChange.getThem() ? Colors.black : Colors.white),
+                                                                      child: Icon(
+                                                                          Icons
+                                                                              .call,
+                                                                          color: themeChange.getThem()
+                                                                              ? Colors.black
+                                                                              : Colors.white),
                                                                     ),
                                                                   ),
                                                                 ),
@@ -318,28 +522,46 @@ class OrderScreen extends StatelessWidget {
                                                                   width: 10,
                                                                 ),
                                                                 Expanded(
-                                                                  child: InkWell(
-                                                                    onTap: () async {
-                                                                      if (Constant.mapType == "inappmap") {
-                                                                        if (orderModel.status == Constant.rideActive || orderModel.status == Constant.rideInProgress) {
-                                                                          Get.to(const LiveTrackingScreen(), arguments: {
-                                                                            "orderModel": orderModel,
-                                                                            "type": "orderModel",
-                                                                          });
+                                                                  child:
+                                                                      InkWell(
+                                                                    onTap:
+                                                                        () async {
+                                                                      if (Constant
+                                                                              .mapType ==
+                                                                          "inappmap") {
+                                                                        if (orderModel.status == Constant.rideActive ||
+                                                                            orderModel.status ==
+                                                                                Constant.rideInProgress) {
+                                                                          Get.to(
+                                                                              const LiveTrackingScreen(),
+                                                                              arguments: {
+                                                                                "orderModel": orderModel,
+                                                                                "type": "orderModel",
+                                                                              });
                                                                         }
                                                                       } else {
                                                                         Utils.redirectMap(
-                                                                            latitude: orderModel.destinationLocationLAtLng!.latitude!,
+                                                                            latitude:
+                                                                                orderModel.destinationLocationLAtLng!.latitude!,
                                                                             longLatitude: orderModel.destinationLocationLAtLng!.longitude!,
                                                                             name: orderModel.destinationLocationName.toString());
                                                                       }
                                                                     },
-                                                                    child: Container(
-                                                                      height: 44,
+                                                                    child:
+                                                                        Container(
+                                                                      height:
+                                                                          44,
                                                                       decoration: BoxDecoration(
-                                                                          color: themeChange.getThem() ? AppColors.darkModePrimary : AppColors.primary,
+                                                                          color: themeChange.getThem()
+                                                                              ? AppColors.darkModePrimary
+                                                                              : AppColors.primary,
                                                                           borderRadius: BorderRadius.circular(5)),
-                                                                      child: Icon(Icons.map, color: themeChange.getThem() ? Colors.black : Colors.white),
+                                                                      child: Icon(
+                                                                          Icons
+                                                                              .map,
+                                                                          color: themeChange.getThem()
+                                                                              ? Colors.black
+                                                                              : Colors.white),
                                                                     ),
                                                                   ),
                                                                 )
@@ -349,52 +571,99 @@ class OrderScreen extends StatelessWidget {
                                                           height: 10,
                                                         ),
                                                         Visibility(
-                                                            visible: orderModel.status == Constant.rideInProgress ||
-                                                                orderModel.status == Constant.rideHold ||
-                                                                orderModel.status == Constant.rideHoldAccepted,
-                                                            child: ButtonThem.buildButton(
+                                                            visible: orderModel
+                                                                        .status ==
+                                                                    Constant
+                                                                        .rideInProgress ||
+                                                                orderModel
+                                                                        .status ==
+                                                                    Constant
+                                                                        .rideHold ||
+                                                                orderModel
+                                                                        .status ==
+                                                                    Constant
+                                                                        .rideHoldAccepted,
+                                                            child: ButtonThem
+                                                                .buildButton(
                                                               context,
                                                               title: "SOS".tr,
                                                               btnHeight: 44,
-                                                              onPress: () async {
-                                                                await FireStoreUtils.getSOS(orderModel.id.toString()).then((value) {
-                                                                  if (value != null) {
-                                                                    ShowToastDialog.showToast("Your request is ${value.status}");
+                                                              onPress:
+                                                                  () async {
+                                                                await FireStoreUtils.getSOS(
+                                                                        orderModel
+                                                                            .id
+                                                                            .toString())
+                                                                    .then(
+                                                                        (value) {
+                                                                  if (value !=
+                                                                      null) {
+                                                                    ShowToastDialog
+                                                                        .showToast(
+                                                                            "Your request is ${value.status}");
                                                                   } else {
-                                                                    SosModel sosModel = SosModel();
-                                                                    sosModel.id = Constant.getUuid();
-                                                                    sosModel.orderId = orderModel.id;
-                                                                    sosModel.status = "Initiated";
-                                                                    sosModel.orderType = "city";
-                                                                    FireStoreUtils.setSOS(sosModel);
+                                                                    SosModel
+                                                                        sosModel =
+                                                                        SosModel();
+                                                                    sosModel.id =
+                                                                        Constant
+                                                                            .getUuid();
+                                                                    sosModel.orderId =
+                                                                        orderModel
+                                                                            .id;
+                                                                    sosModel.status =
+                                                                        "Initiated";
+                                                                    sosModel.orderType =
+                                                                        "city";
+                                                                    FireStoreUtils
+                                                                        .setSOS(
+                                                                            sosModel);
                                                                   }
                                                                 });
                                                               },
                                                             )),
-                                                        orderModel.status == Constant.rideInProgress
+                                                        orderModel.status ==
+                                                                Constant
+                                                                    .rideInProgress
                                                             ? const SizedBox(
                                                                 height: 10,
                                                               )
                                                             : SizedBox.shrink(),
                                                         Visibility(
-                                                            visible: orderModel.status == Constant.rideInProgress &&
-                                                                (orderModel.totalHoldingCharges == null || orderModel.totalHoldingCharges == "0.0"),
-                                                            child: ButtonThem.buildButton(
+                                                            visible: orderModel
+                                                                        .status ==
+                                                                    Constant
+                                                                        .rideInProgress &&
+                                                                (orderModel.totalHoldingCharges ==
+                                                                        null ||
+                                                                    orderModel
+                                                                            .totalHoldingCharges ==
+                                                                        "0.0"),
+                                                            child: ButtonThem
+                                                                .buildButton(
                                                               context,
                                                               title: "HOLD".tr,
                                                               btnHeight: 44,
-                                                              onPress: () async {
+                                                              onPress:
+                                                                  () async {
                                                                 showDialog(
-                                                                  context: context,
-                                                                  builder: (BuildContext context) {
+                                                                  context:
+                                                                      context,
+                                                                  builder:
+                                                                      (BuildContext
+                                                                          context) {
                                                                     return AlertDialog(
-                                                                      title: Text('Are you sure you want to hold the ride?'.tr),
+                                                                      title: Text(
+                                                                          'Are you sure you want to hold the ride?'
+                                                                              .tr),
                                                                       actions: [
                                                                         SizedBox(
-                                                                          height: 5,
+                                                                          height:
+                                                                              5,
                                                                         ),
                                                                         TextButton(
-                                                                          onPressed: () async {
+                                                                          onPressed:
+                                                                              () async {
                                                                             Navigator.of(context).pop();
                                                                           },
                                                                           child: Container(
@@ -413,9 +682,11 @@ class OrderScreen extends StatelessWidget {
                                                                               )),
                                                                         ),
                                                                         TextButton(
-                                                                          onPressed: () async {
-                                                                            ShowToastDialog.showLoader("Please wait...".tr);
-                                                                            orderModel.status = Constant.rideHold;
+                                                                          onPressed:
+                                                                              () async {
+                                                                            ShowToastDialog.showLoader("Please wait".tr);
+                                                                            orderModel.status =
+                                                                                Constant.rideHold;
                                                                             await FireStoreUtils.setOrder(orderModel).then((value) {
                                                                               if (value == true) {
                                                                                 ShowToastDialog.closeLoader();
@@ -443,16 +714,28 @@ class OrderScreen extends StatelessWidget {
                                                           height: 10,
                                                         ),
                                                         Visibility(
-                                                            visible: orderModel.status == Constant.rideComplete &&
-                                                                (orderModel.paymentStatus == null || orderModel.paymentStatus == false),
-                                                            child: ButtonThem.buildButton(
+                                                            visible: orderModel
+                                                                        .status ==
+                                                                    Constant
+                                                                        .rideComplete &&
+                                                                (orderModel.paymentStatus ==
+                                                                        null ||
+                                                                    orderModel
+                                                                            .paymentStatus ==
+                                                                        false),
+                                                            child: ButtonThem
+                                                                .buildButton(
                                                               context,
                                                               title: "Pay".tr,
                                                               btnHeight: 44,
-                                                              onPress: () async {
-                                                                Get.to(const PaymentOrderScreen(), arguments: {
-                                                                  "orderModel": orderModel,
-                                                                });
+                                                              onPress:
+                                                                  () async {
+                                                                Get.to(
+                                                                    const PaymentOrderScreen(),
+                                                                    arguments: {
+                                                                      "orderModel":
+                                                                          orderModel,
+                                                                    });
                                                                 // paymentMethodDialog(context, controller, orderModel);
                                                               },
                                                             )),
@@ -468,83 +751,152 @@ class OrderScreen extends StatelessWidget {
                               StreamBuilder<QuerySnapshot>(
                                 stream: FirebaseFirestore.instance
                                     .collection(CollectionName.orders)
-                                    .where("userId", isEqualTo: FireStoreUtils.getCurrentUid())
-                                    .where("status", isEqualTo: Constant.rideComplete)
+                                    .where("userId",
+                                        isEqualTo:
+                                            FireStoreUtils.getCurrentUid())
+                                    .where("status",
+                                        isEqualTo: Constant.rideComplete)
                                     .where("paymentStatus", isEqualTo: true)
                                     .orderBy("createdDate", descending: true)
                                     .snapshots(),
-                                builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+                                builder: (BuildContext context,
+                                    AsyncSnapshot<QuerySnapshot> snapshot) {
                                   if (snapshot.hasError) {
-                                    return Center(child: Text('Something went wrong'.tr));
+                                    return Center(
+                                        child: Text('Something went wrong'.tr));
                                   }
-                                  if (snapshot.connectionState == ConnectionState.waiting) {
+                                  if (snapshot.connectionState ==
+                                      ConnectionState.waiting) {
                                     return Constant.loader();
                                   }
                                   return snapshot.data!.docs.isEmpty
                                       ? Center(
-                                          child: Text("No completed rides found".tr),
+                                          child: Text(
+                                              "No completed rides found".tr),
                                         )
                                       : ListView.builder(
                                           itemCount: snapshot.data!.docs.length,
                                           scrollDirection: Axis.vertical,
                                           shrinkWrap: true,
                                           itemBuilder: (context, index) {
-                                            OrderModel orderModel = OrderModel.fromJson(snapshot.data!.docs[index].data() as Map<String, dynamic>);
+                                            OrderModel orderModel =
+                                                OrderModel.fromJson(snapshot
+                                                        .data!.docs[index]
+                                                        .data()
+                                                    as Map<String, dynamic>);
                                             return Padding(
                                               padding: const EdgeInsets.all(10),
                                               child: Container(
                                                 decoration: BoxDecoration(
-                                                  color: themeChange.getThem() ? AppColors.darkContainerBackground : AppColors.containerBackground,
-                                                  borderRadius: const BorderRadius.all(Radius.circular(10)),
-                                                  border: Border.all(color: themeChange.getThem() ? AppColors.darkContainerBorder : AppColors.containerBorder, width: 0.5),
-                                                  boxShadow: themeChange.getThem()
+                                                  color: themeChange.getThem()
+                                                      ? AppColors
+                                                          .darkContainerBackground
+                                                      : AppColors
+                                                          .containerBackground,
+                                                  borderRadius:
+                                                      const BorderRadius.all(
+                                                          Radius.circular(10)),
+                                                  border: Border.all(
+                                                      color: themeChange
+                                                              .getThem()
+                                                          ? AppColors
+                                                              .darkContainerBorder
+                                                          : AppColors
+                                                              .containerBorder,
+                                                      width: 0.5),
+                                                  boxShadow: themeChange
+                                                          .getThem()
                                                       ? null
                                                       : [
                                                           BoxShadow(
-                                                            color: Colors.black.withOpacity(0.10),
+                                                            color: Colors.black
+                                                                .withOpacity(
+                                                                    0.10),
                                                             blurRadius: 5,
-                                                            offset: const Offset(0, 4), // changes position of shadow
+                                                            offset: const Offset(
+                                                                0,
+                                                                4), // changes position of shadow
                                                           ),
                                                         ],
                                                 ),
                                                 child: InkWell(
                                                     onTap: () {
-                                                      Get.to(const CompleteOrderScreen(), arguments: {
-                                                        "orderModel": orderModel,
-                                                      });
+                                                      Get.to(
+                                                          const CompleteOrderScreen(),
+                                                          arguments: {
+                                                            "orderModel":
+                                                                orderModel,
+                                                          });
                                                     },
                                                     child: Padding(
-                                                      padding: const EdgeInsets.all(12.0),
+                                                      padding:
+                                                          const EdgeInsets.all(
+                                                              12.0),
                                                       child: Column(
-                                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
                                                         children: [
                                                           DriverView(
-                                                            driverId: orderModel.driverId.toString(),
+                                                            driverId: orderModel
+                                                                .driverId
+                                                                .toString(),
                                                           ),
                                                           const Padding(
-                                                            padding: EdgeInsets.symmetric(vertical: 4),
+                                                            padding: EdgeInsets
+                                                                .symmetric(
+                                                                    vertical:
+                                                                        4),
                                                             child: Divider(
                                                               thickness: 1,
                                                             ),
                                                           ),
                                                           LocationView(
-                                                            sourceLocation: orderModel.sourceLocationName.toString(),
-                                                            destinationLocation: orderModel.destinationLocationName.toString(),
+                                                            sourceLocation:
+                                                                orderModel
+                                                                    .sourceLocationName
+                                                                    .toString(),
+                                                            destinationLocation:
+                                                                orderModel
+                                                                    .destinationLocationName
+                                                                    .toString(),
                                                           ),
                                                           Padding(
-                                                            padding: const EdgeInsets.symmetric(vertical: 14),
+                                                            padding:
+                                                                const EdgeInsets
+                                                                    .symmetric(
+                                                                    vertical:
+                                                                        14),
                                                             child: Container(
                                                               decoration: BoxDecoration(
-                                                                  color: themeChange.getThem() ? AppColors.darkGray : AppColors.gray,
-                                                                  borderRadius: const BorderRadius.all(Radius.circular(10))),
+                                                                  color: themeChange.getThem()
+                                                                      ? AppColors
+                                                                          .darkGray
+                                                                      : AppColors
+                                                                          .gray,
+                                                                  borderRadius:
+                                                                      const BorderRadius
+                                                                          .all(
+                                                                          Radius.circular(
+                                                                              10))),
                                                               child: Padding(
-                                                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+                                                                  padding: const EdgeInsets
+                                                                      .symmetric(
+                                                                      horizontal:
+                                                                          10,
+                                                                      vertical:
+                                                                          12),
                                                                   child: Center(
                                                                     child: Row(
                                                                       children: [
                                                                         Expanded(
-                                                                            child: Text(orderModel.status.toString(), style: GoogleFonts.poppins(fontWeight: FontWeight.w500))),
-                                                                        Text(Constant().formatTimestamp(orderModel.createdDate), style: GoogleFonts.poppins()),
+                                                                            child:
+                                                                                Text("Viaje Completado", style: GoogleFonts.poppins(fontWeight: FontWeight.w500))),
+                                                                        Text(
+                                                                            Constant().formatTimestamp(orderModel
+                                                                                .createdDate),
+                                                                            style:
+                                                                                GoogleFonts.poppins()),
                                                                       ],
                                                                     ),
                                                                   )),
@@ -553,15 +905,22 @@ class OrderScreen extends StatelessWidget {
                                                           Row(
                                                             children: [
                                                               Expanded(
-                                                                  child: ButtonThem.buildButton(
+                                                                  child: ButtonThem
+                                                                      .buildButton(
                                                                 context,
-                                                                title: "Review".tr,
+                                                                title:
+                                                                    "Review".tr,
                                                                 btnHeight: 44,
-                                                                onPress: () async {
-                                                                  Get.to(const ReviewScreen(), arguments: {
-                                                                    "type": "orderModel",
-                                                                    "orderModel": orderModel,
-                                                                  });
+                                                                onPress:
+                                                                    () async {
+                                                                  Get.to(
+                                                                      const ReviewScreen(),
+                                                                      arguments: {
+                                                                        "type":
+                                                                            "orderModel",
+                                                                        "orderModel":
+                                                                            orderModel,
+                                                                      });
                                                                 },
                                                               )),
                                                             ],
@@ -577,64 +936,113 @@ class OrderScreen extends StatelessWidget {
                               StreamBuilder<QuerySnapshot>(
                                 stream: FirebaseFirestore.instance
                                     .collection(CollectionName.orders)
-                                    .where("userId", isEqualTo: FireStoreUtils.getCurrentUid())
-                                    .where("status", isEqualTo: Constant.rideCanceled)
+                                    .where("userId",
+                                        isEqualTo:
+                                            FireStoreUtils.getCurrentUid())
+                                    .where("status",
+                                        isEqualTo: Constant.rideCanceled)
                                     .orderBy("createdDate", descending: true)
                                     .snapshots(),
-                                builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+                                builder: (BuildContext context,
+                                    AsyncSnapshot<QuerySnapshot> snapshot) {
                                   if (snapshot.hasError) {
-                                    return Center(child: Text('Something went wrong'.tr));
+                                    return Center(
+                                        child: Text('Something went wrong'.tr));
                                   }
-                                  if (snapshot.connectionState == ConnectionState.waiting) {
+                                  if (snapshot.connectionState ==
+                                      ConnectionState.waiting) {
                                     return Constant.loader();
                                   }
                                   return snapshot.data!.docs.isEmpty
                                       ? Center(
-                                          child: Text("No completed rides found".tr),
+                                          child: Text(
+                                              "No completed rides found".tr),
                                         )
                                       : ListView.builder(
                                           itemCount: snapshot.data!.docs.length,
                                           scrollDirection: Axis.vertical,
                                           shrinkWrap: true,
                                           itemBuilder: (context, index) {
-                                            OrderModel orderModel = OrderModel.fromJson(snapshot.data!.docs[index].data() as Map<String, dynamic>);
+                                            OrderModel orderModel =
+                                                OrderModel.fromJson(snapshot
+                                                        .data!.docs[index]
+                                                        .data()
+                                                    as Map<String, dynamic>);
                                             return Padding(
                                               padding: const EdgeInsets.all(10),
                                               child: Container(
                                                 decoration: BoxDecoration(
-                                                  color: themeChange.getThem() ? AppColors.darkContainerBackground : AppColors.containerBackground,
-                                                  borderRadius: const BorderRadius.all(Radius.circular(10)),
-                                                  border: Border.all(color: themeChange.getThem() ? AppColors.darkContainerBorder : AppColors.containerBorder, width: 0.5),
-                                                  boxShadow: themeChange.getThem()
+                                                  color: themeChange.getThem()
+                                                      ? AppColors
+                                                          .darkContainerBackground
+                                                      : AppColors
+                                                          .containerBackground,
+                                                  borderRadius:
+                                                      const BorderRadius.all(
+                                                          Radius.circular(10)),
+                                                  border: Border.all(
+                                                      color: themeChange
+                                                              .getThem()
+                                                          ? AppColors
+                                                              .darkContainerBorder
+                                                          : AppColors
+                                                              .containerBorder,
+                                                      width: 0.5),
+                                                  boxShadow: themeChange
+                                                          .getThem()
                                                       ? null
                                                       : [
                                                           BoxShadow(
-                                                            color: Colors.black.withOpacity(0.10),
+                                                            color: Colors.black
+                                                                .withOpacity(
+                                                                    0.10),
                                                             blurRadius: 5,
-                                                            offset: const Offset(0, 4), // changes position of shadow
+                                                            offset: const Offset(
+                                                                0,
+                                                                4), // changes position of shadow
                                                           ),
                                                         ],
                                                 ),
                                                 child: Padding(
-                                                  padding: const EdgeInsets.all(12.0),
+                                                  padding: const EdgeInsets.all(
+                                                      12.0),
                                                   child: Column(
-                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
                                                     children: [
-                                                      orderModel.status == Constant.rideComplete || orderModel.status == Constant.rideActive
+                                                      orderModel.status ==
+                                                                  Constant
+                                                                      .rideComplete ||
+                                                              orderModel
+                                                                      .status ==
+                                                                  Constant
+                                                                      .rideActive
                                                           ? const SizedBox()
                                                           : Row(
                                                               children: [
                                                                 Expanded(
                                                                   child: Text(
-                                                                    orderModel.status.toString(),
-                                                                    style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
+                                                                    orderModel
+                                                                        .status
+                                                                        .toString(),
+                                                                    style: GoogleFonts.poppins(
+                                                                        fontWeight:
+                                                                            FontWeight.w500),
                                                                   ),
                                                                 ),
                                                                 Text(
                                                                   Constant.amountShow(
-                                                                      amount:
-                                                                          double.parse(orderModel.offerRate.toString()).toStringAsFixed(Constant.currencyModel!.decimalDigits!)),
-                                                                  style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                                                                      amount: double.parse(orderModel
+                                                                              .offerRate
+                                                                              .toString())
+                                                                          .toStringAsFixed(Constant
+                                                                              .currencyModel!
+                                                                              .decimalDigits!)),
+                                                                  style: GoogleFonts.poppins(
+                                                                      fontWeight:
+                                                                          FontWeight
+                                                                              .bold),
                                                                 ),
                                                               ],
                                                             ),
@@ -642,23 +1050,59 @@ class OrderScreen extends StatelessWidget {
                                                         height: 10,
                                                       ),
                                                       LocationView(
-                                                        sourceLocation: orderModel.sourceLocationName.toString(),
-                                                        destinationLocation: orderModel.destinationLocationName.toString(),
+                                                        sourceLocation: orderModel
+                                                            .sourceLocationName
+                                                            .toString(),
+                                                        destinationLocation:
+                                                            orderModel
+                                                                .destinationLocationName
+                                                                .toString(),
                                                       ),
                                                       Padding(
-                                                        padding: const EdgeInsets.symmetric(vertical: 14),
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .symmetric(
+                                                                vertical: 14),
                                                         child: Container(
                                                           decoration: BoxDecoration(
-                                                              color: themeChange.getThem() ? AppColors.darkGray : AppColors.gray,
-                                                              borderRadius: const BorderRadius.all(Radius.circular(10))),
+                                                              color: themeChange
+                                                                      .getThem()
+                                                                  ? AppColors
+                                                                      .darkGray
+                                                                  : AppColors
+                                                                      .gray,
+                                                              borderRadius:
+                                                                  const BorderRadius
+                                                                      .all(
+                                                                      Radius.circular(
+                                                                          10))),
                                                           child: Padding(
-                                                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                                                              padding:
+                                                                  const EdgeInsets
+                                                                      .symmetric(
+                                                                      horizontal:
+                                                                          10,
+                                                                      vertical:
+                                                                          10),
                                                               child: Row(
-                                                                mainAxisAlignment: MainAxisAlignment.center,
-                                                                crossAxisAlignment: CrossAxisAlignment.center,
+                                                                mainAxisAlignment:
+                                                                    MainAxisAlignment
+                                                                        .center,
+                                                                crossAxisAlignment:
+                                                                    CrossAxisAlignment
+                                                                        .center,
                                                                 children: [
-                                                                  Expanded(child: Text(orderModel.status.toString())),
-                                                                  Text(Constant().formatTimestamp(orderModel.createdDate), style: GoogleFonts.poppins(fontSize: 12)),
+                                                                  Expanded(
+                                                                      child: Text(orderModel
+                                                                          .status
+                                                                          .toString())),
+                                                                  Text(
+                                                                      Constant().formatTimestamp(
+                                                                          orderModel
+                                                                              .createdDate),
+                                                                      style: GoogleFonts.poppins(
+                                                                          fontSize:
+                                                                              12)),
                                                                 ],
                                                               )),
                                                         ),

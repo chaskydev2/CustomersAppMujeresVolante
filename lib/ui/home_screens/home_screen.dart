@@ -278,7 +278,7 @@ class HomeScreen extends StatelessWidget {
                                             child: TextFieldThem.buildTextFiled(
                                                 context,
                                                 hintText:
-                                                    'Enter Your Current Location'
+                                                    'Ingresa la ubicación de origen'
                                                         .tr,
                                                 controller: controller
                                                     .sourceLocationController
@@ -393,8 +393,8 @@ class HomeScreen extends StatelessWidget {
                                                                       : null,
                                                                   initialPosition:
                                                                       const LatLng(
-                                                                          -33.8567844,
-                                                                          151.213108),
+                                                                          -17.393814,
+                                                                          -66.157043),
                                                                   useCurrentLocation:
                                                                       true,
                                                                   autocompleteComponents: Constant.regionCode !=
@@ -442,17 +442,7 @@ class HomeScreen extends StatelessWidget {
                                                             ),
                                                             const SizedBox(
                                                               width: 10,
-                                                            ),
-                                                            InkWell(
-                                                                onTap: () {
-                                                                  ariPortDialog(
-                                                                      context,
-                                                                      controller,
-                                                                      true);
-                                                                },
-                                                                child: const Icon(
-                                                                    Icons
-                                                                        .flight_takeoff))
+                                                            )
                                                           ],
                                                         )),
                                                     SizedBox(
@@ -586,17 +576,7 @@ class HomeScreen extends StatelessWidget {
                                                             ),
                                                             const SizedBox(
                                                               width: 10,
-                                                            ),
-                                                            InkWell(
-                                                                onTap: () {
-                                                                  ariPortDialog(
-                                                                      context,
-                                                                      controller,
-                                                                      false);
-                                                                },
-                                                                child: const Icon(
-                                                                    Icons
-                                                                        .flight_takeoff))
+                                                            )
                                                           ],
                                                         )),
                                                   ],
@@ -801,8 +781,7 @@ class HomeScreen extends StatelessWidget {
                                                                   text:
                                                                       TextSpan(
                                                                     text:
-                                                                        'Recommended Price is ${Constant.amountShow(amount: controller.amount.value)}. Approx time ${controller.duration}. Approx distance ${double.parse(controller.distance.value).toStringAsFixed(Constant.currencyModel!.decimalDigits!)} ${Constant.distanceType}'
-                                                                            .tr,
+                                                                        'Tu precio es estimado es ${Constant.amountShow(amount: controller.amount.value)}. tiempo aproximado es ${controller.duration}. distancia aproximada es ${double.parse(controller.distance.value).toStringAsFixed(Constant.currencyModel!.decimalDigits!)} ${Constant.distanceType}',
                                                                     style: GoogleFonts.poppins(
                                                                         color: const Color
                                                                             .fromARGB(
@@ -814,7 +793,7 @@ class HomeScreen extends StatelessWidget {
                                                                 )
                                                               : RichText(
                                                                   text: TextSpan(
-                                                                      text: 'Your Price is ${Constant.amountShow(amount: controller.amount.value)}. Approx time ${controller.duration}. Approx distance ${double.parse(controller.distance.value).toStringAsFixed(Constant.currencyModel!.decimalDigits!)} ${Constant.distanceType}'
+                                                                      text: 'Tu precio es estimado es ${Constant.amountShow(amount: controller.amount.value)}. tiempo aproximado es ${controller.duration}. distancia aproximada es ${double.parse(controller.distance.value).toStringAsFixed(Constant.currencyModel!.decimalDigits!)} ${Constant.distanceType}'
                                                                           .tr,
                                                                       style: GoogleFonts.poppins(
                                                                           color: const Color
@@ -1013,7 +992,7 @@ class HomeScreen extends StatelessWidget {
                                     ),
                                     ButtonThem.buildButton(
                                       context,
-                                      title: "Book Ride".tr,
+                                      title: "Hacer Pedido".tr,
                                       btnWidthRatio:
                                           Responsive.width(100, context),
                                       onPress: () async {
@@ -1042,8 +1021,8 @@ class HomeScreen extends StatelessWidget {
                                               "Please select destination location"
                                                   .tr);
                                         } else if (double.parse(
-                                                controller.distance.value) <=
-                                            2) {
+                                                4.00.toString()) <=
+                                            1) {
                                           ShowToastDialog.showToast(
                                               "Please select more than two ${Constant.distanceType} location"
                                                   .tr);
@@ -2624,7 +2603,7 @@ class HomeScreen extends StatelessWidget {
                       ),
                       ButtonThem.buildButton(
                         context,
-                        title: "Pay",
+                        title: "Pay".tr,
                         onPress: () async {
                           Get.back();
                         },
@@ -2666,14 +2645,13 @@ class HomeScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "Someone else taking this ride?",
+                          "Otra persona tomará este viaje?",
                           style: GoogleFonts.poppins(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white),
+                              fontSize: 16, fontWeight: FontWeight.w600),
                         ),
                         Text(
-                          "Choose a contact and share a code to conform that ride.",
+                          "Choose a contact and share a code to conform that ride."
+                              .tr,
                           style: GoogleFonts.poppins(),
                         ),
                         const SizedBox(
@@ -2713,7 +2691,7 @@ class HomeScreen extends StatelessWidget {
                                   ),
                                   Expanded(
                                     child: Text(
-                                      "Myself",
+                                      "Myself".tr,
                                       style: GoogleFonts.poppins(),
                                     ),
                                   ),
@@ -2844,7 +2822,7 @@ class HomeScreen extends StatelessWidget {
                                 ),
                                 Expanded(
                                   child: Text(
-                                    "Choose another contact",
+                                    "Choose another contact".tr,
                                     style: GoogleFonts.poppins(),
                                   ),
                                 ),
@@ -2858,7 +2836,7 @@ class HomeScreen extends StatelessWidget {
                         ButtonThem.buildButton(
                           context,
                           title:
-                              "Book for ${controller.selectedTakingRide.value.fullName}",
+                              "Reservar ${controller.selectedTakingRide.value.fullName?.trim().toUpperCase() == 'MYSELF' ? 'yo mismo' : controller.selectedTakingRide.value.fullName}",
                           onPress: () async {
                             Get.back();
                           },

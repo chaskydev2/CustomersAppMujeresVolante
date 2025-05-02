@@ -15,13 +15,7 @@ class DarkThemeProvider with ChangeNotifier {
   }
 
   bool getThem() {
-    if (_darkTheme == 0) {
-      return true;
-    } else if (_darkTheme == 1) {
-      return false;
-    } else {
-      return getSystemThem();
-    }
+    return false; // Siempre retorna falso para desactivar el modo oscuro
   }
 
   bool getSystemThem() {

@@ -65,8 +65,9 @@ class PaymentOrderController extends GetxController {
       if (value != null) {
         paymentModel.value = value;
 
-        Stripe.publishableKey = paymentModel.value.strip!.clientpublishableKey.toString();
-        Stripe.merchantIdentifier = 'GoRide';
+        Stripe.publishableKey =
+            paymentModel.value.strip!.clientpublishableKey.toString();
+        Stripe.merchantIdentifier = 'mujeres al volante';
         Stripe.instance.applySettings();
         setRef();
         selectedPaymentMethod.value = orderModel.value.paymentType.toString();
@@ -77,12 +78,14 @@ class PaymentOrderController extends GetxController {
       }
     });
 
-    await FireStoreUtils.getUserProfile(FireStoreUtils.getCurrentUid()).then((value) {
+    await FireStoreUtils.getUserProfile(FireStoreUtils.getCurrentUid())
+        .then((value) {
       if (value != null) {
         userModel.value = value;
       }
     });
-    await FireStoreUtils.getDriver(orderModel.value.driverId.toString()).then((value) {
+    await FireStoreUtils.getDriver(orderModel.value.driverId.toString())
+        .then((value) {
       if (value != null) {
         driverUserModel.value = value;
       }
@@ -94,7 +97,7 @@ class PaymentOrderController extends GetxController {
   }
 
   completeOrder() async {
-    ShowToastDialog.showLoader("Please wait..");
+    ShowToastDialog.showLoader("Please wait".tr);
     orderModel.value.paymentStatus = true;
     orderModel.value.paymentType = selectedPaymentMethod.value;
     orderModel.value.status = Constant.rideComplete;
@@ -112,13 +115,17 @@ class PaymentOrderController extends GetxController {
         userType: "driver",
         note: "Ride amount credited");
 
-    await FireStoreUtils.setWalletTransaction(transactionModel).then((value) async {
+    await FireStoreUtils.setWalletTransaction(transactionModel)
+        .then((value) async {
       if (value == true) {
-        await FireStoreUtils.updateDriverWallet(amount: total.value.toString(), driverId: orderModel.value.driverId.toString());
+        await FireStoreUtils.updateDriverWallet(
+            amount: total.value.toString(),
+            driverId: orderModel.value.driverId.toString());
       }
     });
 
-    if (driverUserModel.value.subscriptionPlan!.id == Constant.commissionSubscriptionID) {
+    if (driverUserModel.value.subscriptionPlan!.id ==
+        Constant.commissionSubscriptionID) {
       WalletTransactionModel adminCommissionWallet = WalletTransactionModel(
           id: Constant.getUuid(),
           amount:
@@ -131,7 +138,8 @@ class PaymentOrderController extends GetxController {
           userId: orderModel.value.driverId.toString(),
           note: "Admin commission debited");
 
-      await FireStoreUtils.setWalletTransaction(adminCommissionWallet).then((value) async {
+      await FireStoreUtils.setWalletTransaction(adminCommissionWallet)
+          .then((value) async {
         if (value == true) {
           await FireStoreUtils.updateDriverWallet(
               amount:
@@ -142,16 +150,21 @@ class PaymentOrderController extends GetxController {
     }
 
     if (driverUserModel.value.fcmToken != null) {
-      Map<String, dynamic> playLoad = <String, dynamic>{"type": "city_order_payment_complete", "orderId": orderModel.value.id};
+      Map<String, dynamic> playLoad = <String, dynamic>{
+        "type": "city_order_payment_complete",
+        "orderId": orderModel.value.id
+      };
 
       await SendNotification.sendOneNotification(
           token: driverUserModel.value.fcmToken.toString(),
           title: 'Payment Received',
-          body: '${userModel.value.fullName}  has paid ${Constant.amountShow(amount: total.value.toString())} for the completed ride.Check your earnings for details.',
+          body:
+              '${userModel.value.fullName}  has paid ${Constant.amountShow(amount: total.value.toString())} for the completed ride.Check your earnings for details.',
           payload: playLoad);
     }
 
-    await FireStoreUtils.getFirestOrderOrNOt(orderModel.value).then((value) async {
+    await FireStoreUtils.getFirestOrderOrNOt(orderModel.value)
+        .then((value) async {
       if (value == true) {
         await FireStoreUtils.updateReferralAmount(orderModel.value);
       }
@@ -160,7 +173,7 @@ class PaymentOrderController extends GetxController {
     await FireStoreUtils.setOrder(orderModel.value).then((value) {
       if (value == true) {
         ShowToastDialog.closeLoader();
-        ShowToastDialog.showToast("Ride Complete successfully");
+        ShowToastDialog.showToast("Viaje Completado con exito");
       }
     });
   }
@@ -171,12 +184,17 @@ class PaymentOrderController extends GetxController {
     orderModel.value.coupon = selectedCouponModel.value;
 
     await SendNotification.sendOneNotification(
-        token: driverUserModel.value.fcmToken.toString(), title: 'Payment changed.', body: '${userModel.value.fullName} has changed payment method.', payload: {});
+        token: driverUserModel.value.fcmToken.toString(),
+        title: 'Payment changed.',
+        body: '${userModel.value.fullName} has changed payment method.',
+        payload: {});
 
     FireStoreUtils.setOrder(orderModel.value).then((value) {
       if (value == true) {
         Get.back();
-        ShowToastDialog.showToast("Your payment request sent to driver please wait to the conformation".tr);
+        ShowToastDialog.showToast(
+            "Your payment request sent to driver please wait to the conformation"
+                .tr);
       }
     });
   }
@@ -216,37 +234,65 @@ class PaymentOrderController extends GetxController {
     List<String> startParts = startNightTime.split(':');
     List<String> endParts = endNightTime.split(':');
 
-    startNightTimeString = DateTime(currentDate.year, currentDate.month, currentDate.day, int.parse(startParts[0]), int.parse(startParts[1]));
-    endNightTimeString = DateTime(currentDate.year, currentDate.month, currentDate.day, int.parse(endParts[0]), int.parse(endParts[1]));
+    startNightTimeString = DateTime(currentDate.year, currentDate.month,
+        currentDate.day, int.parse(startParts[0]), int.parse(startParts[1]));
+    endNightTimeString = DateTime(currentDate.year, currentDate.month,
+        currentDate.day, int.parse(endParts[0]), int.parse(endParts[1]));
 
-    double durationValueInMinutes = convertToMinutes(orderModel.value.duration.toString());
-    double distance = double.tryParse(orderModel.value.distance.toString()) ?? 0.0;
+    double durationValueInMinutes =
+        convertToMinutes(orderModel.value.duration.toString());
+    double distance =
+        double.tryParse(orderModel.value.distance.toString()) ?? 0.0;
     double nonAcChargeValue = 0.0;
     double acChargeValue = 0.0;
     double kmCharge = 0.0;
 
-    if (orderModel.value.driverId != null && orderModel.value.driverId!.isNotEmpty) {
-      nonAcChargeValue = double.tryParse(driverUserModel.value.vehicleInformation!.nonAcPerKmRate.toString()) ?? 0.0;
-      acChargeValue = double.tryParse(driverUserModel.value.vehicleInformation!.nonAcPerKmRate.toString()) ?? 0.0;
-      kmCharge = double.tryParse(driverUserModel.value.vehicleInformation!.perKmRate ?? '0.0') ?? 0.0;
+    if (orderModel.value.driverId != null &&
+        orderModel.value.driverId!.isNotEmpty) {
+      nonAcChargeValue = double.tryParse(driverUserModel
+              .value.vehicleInformation!.nonAcPerKmRate
+              .toString()) ??
+          0.0;
+      acChargeValue = double.tryParse(driverUserModel
+              .value.vehicleInformation!.nonAcPerKmRate
+              .toString()) ??
+          0.0;
+      kmCharge = double.tryParse(
+              driverUserModel.value.vehicleInformation!.perKmRate ?? '0.0') ??
+          0.0;
     } else {
-      nonAcChargeValue = double.tryParse(orderModel.value.service!.nonAcCharge.toString()) ?? 0.0;
-      acChargeValue = double.tryParse(orderModel.value.service!.acCharge.toString()) ?? 0.0;
-      kmCharge = double.tryParse(orderModel.value.service!.kmCharge ?? '0.0') ?? 0.0;
+      nonAcChargeValue =
+          double.tryParse(orderModel.value.service!.nonAcCharge.toString()) ??
+              0.0;
+      acChargeValue =
+          double.tryParse(orderModel.value.service!.acCharge.toString()) ?? 0.0;
+      kmCharge =
+          double.tryParse(orderModel.value.service!.kmCharge ?? '0.0') ?? 0.0;
     }
 
-    totalChargeOfMinute.value = double.parse(durationValueInMinutes.toString()) * double.parse(orderModel.value.service!.perMinuteCharge.toString());
-    basicFareCharge.value = double.parse(orderModel.value.service!.basicFareCharge.toString());
-    holdingCharge.value = double.parse(orderModel.value.totalHoldingCharges.toString());
-    if (distance <= double.parse(orderModel.value.service!.basicFare.toString())) {
-      if (currentTime.isAfter(startNightTimeString) && currentTime.isBefore(endNightTimeString)) {
-        amount.value = amount.value * double.parse(orderModel.value.service!.nightCharge.toString());
+    totalChargeOfMinute.value =
+        double.parse(durationValueInMinutes.toString()) *
+            double.parse(orderModel.value.service!.perMinuteCharge.toString());
+    basicFareCharge.value =
+        double.parse(orderModel.value.service!.basicFareCharge.toString());
+    holdingCharge.value =
+        double.parse(orderModel.value.totalHoldingCharges.toString());
+    if (distance <=
+        double.parse(orderModel.value.service!.basicFare.toString())) {
+      if (currentTime.isAfter(startNightTimeString) &&
+          currentTime.isBefore(endNightTimeString)) {
+        amount.value = amount.value *
+            double.parse(orderModel.value.service!.nightCharge.toString());
       } else {
-        amount.value = double.parse(orderModel.value.service!.basicFareCharge.toString());
+        amount.value =
+            double.parse(orderModel.value.service!.basicFareCharge.toString());
       }
     } else {
-      double distanceValue = double.tryParse(orderModel.value.distance.toString()) ?? 0.0;
-      double basicFareValue = double.tryParse(orderModel.value.service!.basicFare.toString()) ?? 0.0;
+      double distanceValue =
+          double.tryParse(orderModel.value.distance.toString()) ?? 0.0;
+      double basicFareValue =
+          double.tryParse(orderModel.value.service!.basicFare.toString()) ??
+              0.0;
       double extraDist = distanceValue - basicFareValue;
 
       double perKmCharge = orderModel.value.service!.isAcNonAc == true
@@ -256,28 +302,45 @@ class PaymentOrderController extends GetxController {
           : kmCharge;
       amount.value = (perKmCharge * extraDist);
 
-      if (currentTime.isAfter(startNightTimeString) && currentTime.isBefore(endNightTimeString)) {
-        totalChargeOfMinute.value = totalChargeOfMinute.value * double.parse(orderModel.value.service!.nightCharge.toString());
-        basicFareCharge.value = basicFareCharge.value * double.parse(orderModel.value.service!.nightCharge.toString());
-        holdingCharge.value = holdingCharge.value * double.parse(orderModel.value.service!.nightCharge.toString());
+      if (currentTime.isAfter(startNightTimeString) &&
+          currentTime.isBefore(endNightTimeString)) {
+        totalChargeOfMinute.value = totalChargeOfMinute.value *
+            double.parse(orderModel.value.service!.nightCharge.toString());
+        basicFareCharge.value = basicFareCharge.value *
+            double.parse(orderModel.value.service!.nightCharge.toString());
+        holdingCharge.value = holdingCharge.value *
+            double.parse(orderModel.value.service!.nightCharge.toString());
       }
     }
 
-    if (orderModel.value.finalRate != null && orderModel.value.finalRate != '0.0') {
-      amount.value = double.parse(orderModel.value.finalRate.toString()) - basicFareCharge.value - totalChargeOfMinute.value - holdingCharge.value;
+    if (orderModel.value.finalRate != null &&
+        orderModel.value.finalRate != '0.0') {
+      amount.value = double.parse(orderModel.value.finalRate.toString()) -
+          basicFareCharge.value -
+          totalChargeOfMinute.value -
+          holdingCharge.value;
     } else {
-      amount.value = amount.value * double.parse(orderModel.value.service!.nightCharge.toString());
+      amount.value = amount.value *
+          double.parse(orderModel.value.service!.nightCharge.toString());
     }
 
-    subTotal.value = amount.value + basicFareCharge.value + totalChargeOfMinute.value + holdingCharge.value;
+    subTotal.value = amount.value +
+        basicFareCharge.value +
+        totalChargeOfMinute.value +
+        holdingCharge.value;
 
     print("===>Subtotal${subTotal.value}");
     if (orderModel.value.taxList != null) {
       for (var element in orderModel.value.taxList!) {
-        taxAmount.value = taxAmount.value + Constant().calculateTax(amount: (subTotal.value - double.parse(couponAmount.value)).toString(), taxModel: element);
+        taxAmount.value = taxAmount.value +
+            Constant().calculateTax(
+                amount: (subTotal.value - double.parse(couponAmount.value))
+                    .toString(),
+                taxModel: element);
       }
     }
-    total.value = (subTotal.value - double.parse(couponAmount.value)) + taxAmount.value;
+    total.value =
+        (subTotal.value - double.parse(couponAmount.value)) + taxAmount.value;
   }
 
   double convertToMinutes(String duration) {
@@ -310,10 +373,12 @@ class PaymentOrderController extends GetxController {
   Future<void> stripeMakePayment({required String amount}) async {
     log(double.parse(amount).toStringAsFixed(0));
     try {
-      Map<String, dynamic>? paymentIntentData = await createStripeIntent(amount: amount);
+      Map<String, dynamic>? paymentIntentData =
+          await createStripeIntent(amount: amount);
       if (paymentIntentData!.containsKey("error")) {
         Get.back();
-        ShowToastDialog.showToast("Something went wrong, please contact admin.");
+        ShowToastDialog.showToast(
+            "Something went wrong, please contact admin.".tr);
       } else {
         await Stripe.instance.initPaymentSheet(
             paymentSheetParameters: SetupPaymentSheetParameters(
@@ -330,7 +395,7 @@ class PaymentOrderController extends GetxController {
                     primary: AppColors.primary,
                   ),
                 ),
-                merchantDisplayName: 'GoRide'));
+                merchantDisplayName: 'mujeres al volante'));
         displayStripePaymentSheet(amount: amount);
       }
     } catch (e, s) {
@@ -372,8 +437,13 @@ class PaymentOrderController extends GetxController {
       };
       log(paymentModel.value.strip!.stripeSecret.toString());
       var stripeSecret = paymentModel.value.strip!.stripeSecret;
-      var response = await http.post(Uri.parse('https://api.stripe.com/v1/payment_intents'),
-          body: body, headers: {'Authorization': 'Bearer $stripeSecret', 'Content-Type': 'application/x-www-form-urlencoded'});
+      var response = await http.post(
+          Uri.parse('https://api.stripe.com/v1/payment_intents'),
+          body: body,
+          headers: {
+            'Authorization': 'Bearer $stripeSecret',
+            'Content-Type': 'application/x-www-form-urlencoded'
+          });
 
       return jsonDecode(response.body);
     } catch (e) {
@@ -382,7 +452,8 @@ class PaymentOrderController extends GetxController {
   }
 
   //mercadoo
-  mercadoPagoMakePayment({required BuildContext context, required String amount}) async {
+  mercadoPagoMakePayment(
+      {required BuildContext context, required String amount}) async {
     final headers = {
       'Authorization': 'Bearer ${paymentModel.value.mercadoPago!.accessToken}',
       'Content-Type': 'application/json',
@@ -435,7 +506,8 @@ class PaymentOrderController extends GetxController {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (BuildContext context) => UsePaypal(
-            sandboxMode: paymentModel.value.paypal!.isSandbox == true ? false : true,
+            sandboxMode:
+                paymentModel.value.paypal!.isSandbox == true ? false : true,
             clientId: paymentModel.value.paypal!.paypalClient ?? '',
             secretKey: paymentModel.value.paypal!.paypalSecret ?? '',
             returnURL: "com.parkme://paypalpay",
@@ -469,7 +541,10 @@ class PaymentOrderController extends GetxController {
   ///PayStack Payment Method
   payStackPayment(String totalAmount) async {
     await PayStackURLGen.payStackURLGen(
-            amount: (double.parse(totalAmount) * 100).toString(), currency: "NGN", secretKey: paymentModel.value.payStack!.secretKey.toString(), userModel: userModel.value)
+            amount: (double.parse(totalAmount) * 100).toString(),
+            currency: "NGN",
+            secretKey: paymentModel.value.payStack!.secretKey.toString(),
+            userModel: userModel.value)
         .then((value) async {
       if (value != null) {
         PayStackUrlModel payStackModel = value;
@@ -489,13 +564,15 @@ class PaymentOrderController extends GetxController {
           }
         });
       } else {
-        ShowToastDialog.showToast("Something went wrong, please contact admin.");
+        ShowToastDialog.showToast(
+            "Something went wrong, please contact admin.".tr);
       }
     });
   }
 
   //flutter wave Payment Method
-  flutterWaveInitiatePayment({required BuildContext context, required String amount}) async {
+  flutterWaveInitiatePayment(
+      {required BuildContext context, required String amount}) async {
     final url = Uri.parse('https://api.flutterwave.com/v3/payments');
     final headers = {
       'Authorization': 'Bearer ${paymentModel.value.flutterWave!.secretKey}',
@@ -523,7 +600,8 @@ class PaymentOrderController extends GetxController {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      Get.to(MercadoPagoScreen(initialURl: data['data']['link']))!.then((value) {
+      Get.to(MercadoPagoScreen(initialURl: data['data']['link']))!
+          .then((value) {
         if (value) {
           ShowToastDialog.showToast("Payment Successful!!");
           completeOrder();
@@ -552,8 +630,13 @@ class PaymentOrderController extends GetxController {
 
   // payFast
   payFastPayment({required BuildContext context, required String amount}) {
-    PayStackURLGen.getPayHTML(payFastSettingData: paymentModel.value.payfast!, amount: amount.toString(), userModel: userModel.value).then((String? value) async {
-      bool isDone = await Get.to(PayFastScreen(htmlData: value!, payFastSettingData: paymentModel.value.payfast!));
+    PayStackURLGen.getPayHTML(
+            payFastSettingData: paymentModel.value.payfast!,
+            amount: amount.toString(),
+            userModel: userModel.value)
+        .then((String? value) async {
+      bool isDone = await Get.to(PayFastScreen(
+          htmlData: value!, payFastSettingData: paymentModel.value.payfast!));
       if (isDone) {
         Get.back();
         ShowToastDialog.showToast("Payment successfully");
@@ -584,26 +667,40 @@ class PaymentOrderController extends GetxController {
     final data = jsonDecode(response.body);
     print(paymentModel.value.paytm!.paytmMID.toString());
 
-    await verifyCheckSum(checkSum: data["code"], amount: amount, orderId: orderId).then((value) {
+    await verifyCheckSum(
+            checkSum: data["code"], amount: amount, orderId: orderId)
+        .then((value) {
       initiatePayment(amount: amount, orderId: orderId).then((value) {
         String callback = "";
         if (paymentModel.value.paytm!.isSandbox == true) {
-          callback = "${callback}https://securegw-stage.paytm.in/theia/paytmCallback?ORDER_ID=$orderId";
+          callback =
+              "${callback}https://securegw-stage.paytm.in/theia/paytmCallback?ORDER_ID=$orderId";
         } else {
-          callback = "${callback}https://securegw.paytm.in/theia/paytmCallback?ORDER_ID=$orderId";
+          callback =
+              "${callback}https://securegw.paytm.in/theia/paytmCallback?ORDER_ID=$orderId";
         }
 
         if (value.head.version.isEmpty) {
           ShowToastDialog.showToast("Payment Failed");
         } else {
           GetPaymentTxtTokenModel result = value;
-          startTransaction(context, txnTokenBy: result.body.txnToken, orderId: orderId, amount: amount, callBackURL: callback, isStaging: paymentModel.value.paytm!.isSandbox);
+          startTransaction(context,
+              txnTokenBy: result.body.txnToken,
+              orderId: orderId,
+              amount: amount,
+              callBackURL: callback,
+              isStaging: paymentModel.value.paytm!.isSandbox);
         }
       });
     });
   }
 
-  Future<void> startTransaction(context, {required String txnTokenBy, required orderId, required double amount, required callBackURL, required isStaging}) async {
+  Future<void> startTransaction(context,
+      {required String txnTokenBy,
+      required orderId,
+      required double amount,
+      required callBackURL,
+      required isStaging}) async {
     // try {
     //   var response = AllInOneSdk.startTransaction(
     //     paymentModel.value.paytm!.paytmMID.toString(),
@@ -639,7 +736,10 @@ class PaymentOrderController extends GetxController {
     // }
   }
 
-  Future verifyCheckSum({required String checkSum, required double amount, required orderId}) async {
+  Future verifyCheckSum(
+      {required String checkSum,
+      required double amount,
+      required orderId}) async {
     String getChecksum = "${Constant.globalUrl}payments/validatechecksum";
     final response = await http.post(
         Uri.parse(
@@ -656,15 +756,19 @@ class PaymentOrderController extends GetxController {
     return data['status'];
   }
 
-  Future<GetPaymentTxtTokenModel> initiatePayment({required double amount, required orderId}) async {
+  Future<GetPaymentTxtTokenModel> initiatePayment(
+      {required double amount, required orderId}) async {
     String initiateURL = "${Constant.globalUrl}payments/initiatepaytmpayment";
     String callback = "";
     if (paymentModel.value.paytm!.isSandbox == true) {
-      callback = "${callback}https://securegw-stage.paytm.in/theia/paytmCallback?ORDER_ID=$orderId";
+      callback =
+          "${callback}https://securegw-stage.paytm.in/theia/paytmCallback?ORDER_ID=$orderId";
     } else {
-      callback = "${callback}https://securegw.paytm.in/theia/paytmCallback?ORDER_ID=$orderId";
+      callback =
+          "${callback}https://securegw.paytm.in/theia/paytmCallback?ORDER_ID=$orderId";
     }
-    final response = await http.post(Uri.parse(initiateURL), headers: {}, body: {
+    final response =
+        await http.post(Uri.parse(initiateURL), headers: {}, body: {
       "mid": paymentModel.value.paytm!.paytmMID,
       "order_id": orderId,
       "key_secret": paymentModel.value.paytm!.merchantKey,
@@ -676,9 +780,11 @@ class PaymentOrderController extends GetxController {
     });
     print(response.body);
     final data = jsonDecode(response.body);
-    if (data["body"]["txnToken"] == null || data["body"]["txnToken"].toString().isEmpty) {
+    if (data["body"]["txnToken"] == null ||
+        data["body"]["txnToken"].toString().isEmpty) {
       Get.back();
-      ShowToastDialog.showToast("something went wrong, please contact admin.");
+      ShowToastDialog.showToast(
+          "something went wrong, please contact admin.".tr);
     }
     return GetPaymentTxtTokenModel.fromJson(data);
   }
@@ -690,7 +796,7 @@ class PaymentOrderController extends GetxController {
     var options = {
       'key': paymentModel.value.razorpay!.razorpayKey,
       'amount': amount * 100,
-      'name': 'GoRide',
+      'name': 'mujeres al volante',
       'order_id': orderId,
       "currency": "INR",
       'description': 'wallet Topup',
@@ -758,7 +864,8 @@ class PaymentOrderController extends GetxController {
     const url = 'https://api.xendit.co/v2/invoices';
     var headers = {
       'Content-Type': 'application/json',
-      'Authorization': generateBasicAuthHeader(paymentModel.value.xendit!.apiKey!.toString()),
+      'Authorization': generateBasicAuthHeader(
+          paymentModel.value.xendit!.apiKey!.toString()),
       // 'Cookie': '__cf_bm=yERkrx3xDITyFGiou0bbKY1bi7xEwovHNwxV1vCNbVc-1724155511-1.0.1.1-jekyYQmPCwY6vIJ524K0V6_CEw6O.dAwOmQnHtwmaXO_MfTrdnmZMka0KZvjukQgXu5B.K_6FJm47SGOPeWviQ',
     };
 
@@ -771,7 +878,8 @@ class PaymentOrderController extends GetxController {
     });
 
     try {
-      final response = await http.post(Uri.parse(url), headers: headers, body: body);
+      final response =
+          await http.post(Uri.parse(url), headers: headers, body: body);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         XenditModel model = XenditModel.fromJson(jsonDecode(response.body));
@@ -795,10 +903,12 @@ class PaymentOrderController extends GetxController {
   static String payToken = '';
   static String orderId = '';
 
-  orangeMakePayment({required String amount, required BuildContext context}) async {
+  orangeMakePayment(
+      {required String amount, required BuildContext context}) async {
     reset();
     var id = Constant.getUuid();
-    var paymentURL = await fetchToken(context: context, orderId: id, amount: amount, currency: 'USD');
+    var paymentURL = await fetchToken(
+        context: context, orderId: id, amount: amount, currency: 'USD');
     ShowToastDialog.closeLoader();
     if (paymentURL.toString() != '') {
       Get.to(() => OrangeMoneyScreen(
@@ -823,7 +933,11 @@ class PaymentOrderController extends GetxController {
     }
   }
 
-  Future fetchToken({required String orderId, required String currency, required BuildContext context, required String amount}) async {
+  Future fetchToken(
+      {required String orderId,
+      required String currency,
+      required BuildContext context,
+      required String amount}) async {
     String apiUrl = 'https://api.orange.com/oauth/v3/token';
     Map<String, String> requestBody = {
       'grant_type': 'client_credentials',
@@ -844,27 +958,38 @@ class PaymentOrderController extends GetxController {
 
       accessToken = responseData['access_token'];
       // ignore: use_build_context_synchronously
-      return await webpayment(context: context, amountData: amount, currency: currency, orderIdData: orderId);
+      return await webpayment(
+          context: context,
+          amountData: amount,
+          currency: currency,
+          orderIdData: orderId);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
           backgroundColor: Color(0xff635bff),
           content: Text(
-            "Something went wrong, please contact admin.",
+            "Something went wrong".tr, // ← correctamente con tr
             style: TextStyle(fontSize: 17),
-          )));
-
+          ),
+        ),
+      );
       return '';
     }
   }
 
-  Future webpayment({required String orderIdData, required BuildContext context, required String currency, required String amountData}) async {
+  Future webpayment(
+      {required String orderIdData,
+      required BuildContext context,
+      required String currency,
+      required String amountData}) async {
     orderId = orderIdData;
     String apiUrl = paymentModel.value.orangePay!.isSandbox! == true
         ? 'https://api.orange.com/orange-money-webpay/dev/v1/webpayment'
         : 'https://api.orange.com/orange-money-webpay/cm/v1/webpayment';
     Map<String, String> requestBody = {
       "merchant_key": paymentModel.value.orangePay!.merchantKey ?? '',
-      "currency": paymentModel.value.orangePay!.isSandbox == true ? "OUV" : currency,
+      "currency":
+          paymentModel.value.orangePay!.isSandbox == true ? "OUV" : currency,
       "order_id": orderId,
       "amount": amount.value.toString(),
       "reference": 'Y-Note Test',
@@ -876,7 +1001,11 @@ class PaymentOrderController extends GetxController {
 
     var response = await http.post(
       Uri.parse(apiUrl),
-      headers: <String, String>{'Authorization': 'Bearer $accessToken', 'Content-Type': 'application/json', 'Accept': 'application/json'},
+      headers: <String, String>{
+        'Authorization': 'Bearer $accessToken',
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
       body: json.encode(requestBody),
     );
 
@@ -890,12 +1019,13 @@ class PaymentOrderController extends GetxController {
         return '';
       }
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          backgroundColor: Color(0xff635bff),
-          content: Text(
-            "Something went wrong, please contact admin.",
-            style: TextStyle(fontSize: 17),
-          )));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        backgroundColor: const Color(0xff635bff),
+        content: Text(
+          "Something went wrong, please contact admin.".tr,
+          style: const TextStyle(fontSize: 17),
+        ),
+      ));
       return '';
     }
   }
@@ -907,7 +1037,8 @@ class PaymentOrderController extends GetxController {
   }
 
   //Midtrans payment
-  midtransMakePayment({required String amount, required BuildContext context}) async {
+  midtransMakePayment(
+      {required String amount, required BuildContext context}) async {
     await createPaymentLink(amount: amount).then((url) {
       ShowToastDialog.closeLoader();
       if (url != '') {
@@ -928,14 +1059,17 @@ class PaymentOrderController extends GetxController {
 
   Future<String> createPaymentLink({required var amount}) async {
     var ordersId = Constant.getUuid();
-    final url = Uri.parse(paymentModel.value.midtrans!.isSandbox == true ? 'https://api.sandbox.midtrans.com/v1/payment-links' : 'https://api.midtrans.com/v1/payment-links');
+    final url = Uri.parse(paymentModel.value.midtrans!.isSandbox == true
+        ? 'https://api.sandbox.midtrans.com/v1/payment-links'
+        : 'https://api.midtrans.com/v1/payment-links');
 
     final response = await http.post(
       url,
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
-        'Authorization': generateBasicAuthHeader(paymentModel.value.midtrans!.serverKey!),
+        'Authorization':
+            generateBasicAuthHeader(paymentModel.value.midtrans!.serverKey!),
       },
       body: jsonEncode({
         'transaction_details': {
@@ -943,7 +1077,9 @@ class PaymentOrderController extends GetxController {
           'gross_amount': double.parse(amount.toString()).toInt(),
         },
         'usage_limit': 2,
-        "callbacks": {"finish": "https://www.google.com?merchant_order_id=$ordersId"},
+        "callbacks": {
+          "finish": "https://www.google.com?merchant_order_id=$ordersId"
+        },
       }),
     );
 
@@ -951,7 +1087,8 @@ class PaymentOrderController extends GetxController {
       final responseData = jsonDecode(response.body);
       return responseData['payment_url'];
     } else {
-      ShowToastDialog.showToast("something went wrong, please contact admin.");
+      ShowToastDialog.showToast(
+          "something went wrong, please contact admin.".tr);
       return '';
     }
   }

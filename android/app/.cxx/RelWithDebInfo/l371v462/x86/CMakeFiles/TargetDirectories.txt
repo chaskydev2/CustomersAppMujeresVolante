@@ -1,0 +1,2 @@
+C:/Users/USUARIO/Desktop/mujeres al volante/newMVolante/android/app/.cxx/RelWithDebInfo/l371v462/x86/CMakeFiles/edit_cache.dir
+C:/Users/USUARIO/Desktop/mujeres al volante/newMVolante/android/app/.cxx/RelWithDebInfo/l371v462/x86/CMakeFiles/rebuild_cache.dir

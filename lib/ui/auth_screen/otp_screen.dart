@@ -32,11 +32,18 @@ class OtpScreen extends StatelessWidget {
                 children: [
                   Padding(
                     padding: const EdgeInsets.only(
-                        top: 40), // Padding superior de 20
+                      top: 10, // Padding superior de 40
+                    ),
                     child: Center(
                       child: Image.asset(
-                        "assets/images/app_logo.png",
-                        width: Responsive.width(60, context),
+                        "assets/images/background.jpeg",
+                        width: MediaQuery.of(context)
+                            .size
+                            .width, // Ocupa todo el ancho de la pantalla
+                        height: MediaQuery.of(context).size.height /
+                            3, // Ocupa la cuarta parte de la altura de la pantalla
+                        fit: BoxFit
+                            .cover, // Ajusta la imagen para que cubra todo el espacio
                       ),
                     ),
                   ),

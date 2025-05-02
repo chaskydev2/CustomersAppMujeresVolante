@@ -16,7 +16,7 @@
     <application
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
-        android:label="customer"
+        android:label="Mujeres al Volante"
         android:usesCleartextTraffic="true"
         android:enableOnBackInvokedCallback="true"
         tools:replace="android:label">
@@ -57,7 +57,7 @@
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="YOUR_API_KEY_HERE" />
+            android:value="AIzaSyBF8F0YnhknJa_cvyMmaJvRVTqPS-somdk" />
 
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"

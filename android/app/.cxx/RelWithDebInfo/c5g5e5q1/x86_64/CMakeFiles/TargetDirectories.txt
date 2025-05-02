@@ -1,0 +1,2 @@
+C:/Users/USUARIO/Desktop/appCustomerMujeresVolante/CustomersAppMujeresVolante/android/app/.cxx/RelWithDebInfo/c5g5e5q1/x86_64/CMakeFiles/edit_cache.dir
+C:/Users/USUARIO/Desktop/appCustomerMujeresVolante/CustomersAppMujeresVolante/android/app/.cxx/RelWithDebInfo/c5g5e5q1/x86_64/CMakeFiles/rebuild_cache.dir

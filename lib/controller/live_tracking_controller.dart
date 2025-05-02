@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:async';
 import 'package:customer/constant/collection_name.dart';
 import 'package:customer/constant/constant.dart';
 import 'package:customer/constant/show_toast_dialog.dart';
@@ -7,7 +8,7 @@ import 'package:customer/model/intercity_order_model.dart';
 import 'package:customer/model/order_model.dart';
 import 'package:customer/themes/app_colors.dart';
 import 'package:customer/utils/fire_store_utils.dart';
-import 'package:flutter/foundation.dart';
+//import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
@@ -15,19 +16,15 @@ import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class LiveTrackingController extends GetxController {
+  final String mapAPIKey = "AIzaSyBF8F0YnhknJa_cvyMmaJvRVTqPS-somdk";
   GoogleMapController? mapController;
 
   @override
   void onInit() {
-    addMarkerSetup();
-    if (Constant.selectedMapType == 'osm') {
-      ShowToastDialog.showLoader("Please wait");
-      mapOsmController = MapController(initPosition: GeoPoint(latitude: 20.9153, longitude: -100.7439), useExternalTracking: false); //OSM
-    } else {
-      getArgument();
-    }
-
     super.onInit();
+    addMarkerSetup();
+    getArgument();
+    // playSound();
   }
 
   @override
@@ -44,56 +41,133 @@ class LiveTrackingController extends GetxController {
   RxString type = "".obs;
 
   getArgument() async {
-    print("=====argumentData====");
     dynamic argumentData = Get.arguments;
-    print("=====argumentData====${argumentData}");
+    print("==== Argumentos recibidos ====");
+    print(argumentData);
+
     if (argumentData != null) {
       type.value = argumentData['type'];
+      print("Tipo de orden: ${type.value}");
 
       if (type.value == "orderModel") {
         OrderModel argumentOrderModel = argumentData['orderModel'];
-        FireStoreUtils.fireStore.collection(CollectionName.orders).doc(argumentOrderModel.id).snapshots().listen((event) {
+        print("Datos del modelo de orden:");
+        print("==== Ubicación de origen (pasajero) ====");
+        print("Latitud: ${argumentOrderModel.sourceLocationLAtLng?.latitude}");
+        print(
+            "Longitud: ${argumentOrderModel.sourceLocationLAtLng?.longitude}");
+
+        print("==== Ubicación de destino ====");
+        print(
+            "Latitud: ${argumentOrderModel.destinationLocationLAtLng?.latitude}");
+        print(
+            "Longitud: ${argumentOrderModel.destinationLocationLAtLng?.longitude}");
+
+        // Agregar el marcador del pasajero INMEDIATAMENTE
+        if (argumentOrderModel.sourceLocationLAtLng?.latitude != null &&
+            argumentOrderModel.sourceLocationLAtLng?.longitude != null) {
+          // Limpiar marcadores existentes
+          markers.clear();
+
+          // Agregar el marcador rojo del pasajero
+          addMarker(
+              latitude: argumentOrderModel.sourceLocationLAtLng!.latitude,
+              longitude: argumentOrderModel.sourceLocationLAtLng!.longitude,
+              id: "Pasajero",
+              descriptor: BitmapDescriptor.defaultMarker,
+              rotation: 0.0);
+
+          // Agregar el marcador del conductor inmediatamente
+          if (driverUserModel.value.location != null) {
+            addMarker(
+                latitude: driverUserModel.value.location!.latitude,
+                longitude: driverUserModel.value.location!.longitude,
+                id: "Conductor",
+                descriptor: BitmapDescriptor.defaultMarkerWithHue(
+                    BitmapDescriptor.hueBlue),
+                rotation: driverUserModel.value.rotation);
+
+            // Trazar la ruta inmediatamente
+            getPolyline(
+                sourceLatitude: driverUserModel.value.location!.latitude,
+                sourceLongitude: driverUserModel.value.location!.longitude,
+                destinationLatitude:
+                    argumentOrderModel.sourceLocationLAtLng!.latitude,
+                destinationLongitude:
+                    argumentOrderModel.sourceLocationLAtLng!.longitude);
+          }
+
+          // Mover la cámara para mostrar toda la ruta
+          if (mapController != null) {
+            mapController!.animateCamera(CameraUpdate.newLatLngBounds(
+                LatLngBounds(
+                    southwest: LatLng(
+                        min(
+                            driverUserModel.value.location!.latitude ?? 0,
+                            argumentOrderModel.sourceLocationLAtLng!.latitude ??
+                                0),
+                        min(
+                            driverUserModel.value.location!.longitude ?? 0,
+                            argumentOrderModel
+                                    .sourceLocationLAtLng!.longitude ??
+                                0)),
+                    northeast: LatLng(
+                        max(
+                            driverUserModel.value.location!.latitude ?? 0,
+                            argumentOrderModel.sourceLocationLAtLng!.latitude ??
+                                0),
+                        max(
+                            driverUserModel.value.location!.longitude ?? 0,
+                            argumentOrderModel
+                                    .sourceLocationLAtLng!.longitude ??
+                                0))),
+                100 // padding
+                ));
+          }
+
+          print("🔴 Marcadores y ruta agregados inicialmente");
+        }
+
+        FireStoreUtils.fireStore
+            .collection(CollectionName.orders)
+            .doc(argumentOrderModel.id)
+            .snapshots()
+            .listen((event) {
           if (event.data() != null) {
             OrderModel orderModelStream = OrderModel.fromJson(event.data()!);
+
             orderModel.value = orderModelStream;
-            FireStoreUtils.fireStore.collection(CollectionName.driverUsers).doc(argumentOrderModel.driverId).snapshots().listen((event) {
+            FireStoreUtils.fireStore
+                .collection(CollectionName.driverUsers)
+                .doc(argumentOrderModel.driverId)
+                .snapshots()
+                .listen((event) {
               if (event.data() != null) {
                 driverUserModel.value = DriverUserModel.fromJson(event.data()!);
-                if (Constant.selectedMapType != 'osm') {
-                  if (orderModel.value.status == Constant.rideInProgress) {
-                    getPolyline(
-                        sourceLatitude: driverUserModel.value.location!.latitude,
-                        sourceLongitude: driverUserModel.value.location!.longitude,
-                        destinationLatitude: orderModel.value.destinationLocationLAtLng!.latitude,
-                        destinationLongitude: orderModel.value.destinationLocationLAtLng!.longitude);
-                  } else {
-                    getPolyline(
-                        sourceLatitude: driverUserModel.value.location!.latitude,
-                        sourceLongitude: driverUserModel.value.location!.longitude,
-                        destinationLatitude: orderModel.value.sourceLocationLAtLng!.latitude,
-                        destinationLongitude: orderModel.value.sourceLocationLAtLng!.longitude);
-                  }
-                } else {
-                  if (orderModel.value.status == Constant.rideInProgress) {
-                    getOSMPolyline(
-                      GeoPoint(latitude: driverUserModel.value.location!.latitude!, longitude: driverUserModel.value.location!.longitude!),
-                      GeoPoint(latitude: orderModel.value.destinationLocationLAtLng!.latitude!, longitude: orderModel.value.destinationLocationLAtLng!.longitude!),
-                    );
-                    setOsmMarker(
-                      departure: GeoPoint(latitude: orderModel.value.sourceLocationLAtLng?.latitude ?? 0.0, longitude: orderModel.value.sourceLocationLAtLng?.longitude ?? 0.0),
-                      destination:
-                          GeoPoint(latitude: orderModel.value.destinationLocationLAtLng?.latitude ?? 0.0, longitude: orderModel.value.destinationLocationLAtLng?.longitude ?? 0.0),
-                    );
-                  } else {
-                    getOSMPolyline(
-                      GeoPoint(latitude: driverUserModel.value.location!.latitude!, longitude: driverUserModel.value.location!.longitude!),
-                      GeoPoint(latitude: orderModel.value.sourceLocationLAtLng!.latitude!, longitude: orderModel.value.sourceLocationLAtLng!.longitude!),
-                    );
-                    setOsmMarker(
-                      departure: GeoPoint(latitude: orderModel.value.sourceLocationLAtLng?.latitude ?? 0.0, longitude: orderModel.value.sourceLocationLAtLng?.longitude ?? 0.0),
-                      destination: GeoPoint(latitude: orderModel.value.sourceLocationLAtLng!.latitude ?? 0.0, longitude: orderModel.value.sourceLocationLAtLng!.longitude ?? 0.0),
-                    );
-                  }
+                print("==== Datos del conductor ====");
+                print(
+                    "Ubicación del conductor: ${driverUserModel.value.location?.latitude}, ${driverUserModel.value.location?.longitude}");
+
+                // Actualizar marcador y ruta cuando el conductor se mueve
+                if (driverUserModel.value.location != null) {
+                  // Actualizar marcador del conductor
+                  addMarker(
+                      latitude: driverUserModel.value.location!.latitude,
+                      longitude: driverUserModel.value.location!.longitude,
+                      id: "Conductor",
+                      descriptor: BitmapDescriptor.defaultMarkerWithHue(
+                          BitmapDescriptor.hueBlue),
+                      rotation: driverUserModel.value.rotation);
+
+                  // Actualizar la ruta
+                  getPolyline(
+                      sourceLatitude: driverUserModel.value.location!.latitude,
+                      sourceLongitude:
+                          driverUserModel.value.location!.longitude,
+                      destinationLatitude:
+                          orderModel.value.sourceLocationLAtLng!.latitude,
+                      destinationLongitude:
+                          orderModel.value.sourceLocationLAtLng!.longitude);
                 }
               }
             });
@@ -104,60 +178,51 @@ class LiveTrackingController extends GetxController {
           }
         });
       } else {
-        InterCityOrderModel argumentOrderModel = argumentData['interCityOrderModel'];
-        FireStoreUtils.fireStore.collection(CollectionName.ordersIntercity).doc(argumentOrderModel.id).snapshots().listen((event) {
+        InterCityOrderModel argumentOrderModel =
+            argumentData['interCityOrderModel'];
+        print("Datos del modelo de orden intercity:");
+        print("Source: ${argumentOrderModel.sourceLocationLAtLng}");
+        print("Destination: ${argumentOrderModel.destinationLocationLAtLng}");
+
+        FireStoreUtils.fireStore
+            .collection(CollectionName.ordersIntercity)
+            .doc(argumentOrderModel.id)
+            .snapshots()
+            .listen((event) {
           if (event.data() != null) {
-            InterCityOrderModel orderModelStream = InterCityOrderModel.fromJson(event.data()!);
-            print(orderModelStream.status.toString());
+            InterCityOrderModel orderModelStream =
+                InterCityOrderModel.fromJson(event.data()!);
+            print("====>");
             intercityOrderModel.value = orderModelStream;
-            FireStoreUtils.fireStore.collection(CollectionName.driverUsers).doc(argumentOrderModel.driverId).snapshots().listen((event) {
+            FireStoreUtils.fireStore
+                .collection(CollectionName.driverUsers)
+                .doc(argumentOrderModel.driverId)
+                .snapshots()
+                .listen((event) {
               if (event.data() != null) {
                 driverUserModel.value = DriverUserModel.fromJson(event.data()!);
                 if (Constant.selectedMapType != 'osm') {
-                  if (intercityOrderModel.value.status == Constant.rideInProgress) {
+                  if (intercityOrderModel.value.status ==
+                      Constant.rideInProgress) {
                     getPolyline(
-                        sourceLatitude: driverUserModel.value.location!.latitude,
-                        sourceLongitude: driverUserModel.value.location!.longitude,
-                        destinationLatitude: intercityOrderModel.value.destinationLocationLAtLng!.latitude,
-                        destinationLongitude: intercityOrderModel.value.destinationLocationLAtLng!.longitude);
+                        sourceLatitude:
+                            driverUserModel.value.location!.latitude,
+                        sourceLongitude:
+                            driverUserModel.value.location!.longitude,
+                        destinationLatitude: intercityOrderModel
+                            .value.destinationLocationLAtLng!.latitude,
+                        destinationLongitude: intercityOrderModel
+                            .value.destinationLocationLAtLng!.longitude);
                   } else {
                     getPolyline(
-                        sourceLatitude: driverUserModel.value.location!.latitude,
-                        sourceLongitude: driverUserModel.value.location!.longitude,
-                        destinationLatitude: intercityOrderModel.value.sourceLocationLAtLng!.latitude,
-                        destinationLongitude: intercityOrderModel.value.sourceLocationLAtLng!.longitude);
-                  }
-                } else {
-                  if (intercityOrderModel.value.status == Constant.rideInProgress) {
-                    getOSMPolyline(
-                      GeoPoint(latitude: driverUserModel.value.location!.latitude!, longitude: driverUserModel.value.location!.longitude!),
-                      GeoPoint(
-                          latitude: intercityOrderModel.value.destinationLocationLAtLng!.latitude!, longitude: intercityOrderModel.value.destinationLocationLAtLng!.longitude!),
-                    );
-                    setOsmMarker(
-                      departure: GeoPoint(
-                        latitude: intercityOrderModel.value.sourceLocationLAtLng!.latitude ?? 0.0,
-                        longitude: intercityOrderModel.value.sourceLocationLAtLng!.longitude ?? 0.0,
-                      ),
-                      destination: GeoPoint(
-                          latitude: intercityOrderModel.value.destinationLocationLAtLng!.latitude ?? 0.0,
-                          longitude: intercityOrderModel.value.destinationLocationLAtLng!.longitude ?? 0.0),
-                    );
-                  } else {
-                    getOSMPolyline(
-                      GeoPoint(latitude: driverUserModel.value.location!.latitude!, longitude: driverUserModel.value.location!.longitude!),
-                      GeoPoint(latitude: intercityOrderModel.value.sourceLocationLAtLng!.latitude!, longitude: intercityOrderModel.value.sourceLocationLAtLng!.longitude!),
-                    );
-                    setOsmMarker(
-                      departure: GeoPoint(
-                        latitude: intercityOrderModel.value.sourceLocationLAtLng!.latitude ?? 0.0,
-                        longitude: intercityOrderModel.value.sourceLocationLAtLng!.longitude ?? 0.0,
-                      ),
-                      destination: GeoPoint(
-                        latitude: intercityOrderModel.value.destinationLocationLAtLng!.latitude ?? 0.0,
-                        longitude: intercityOrderModel.value.destinationLocationLAtLng!.longitude ?? 0.0,
-                      ),
-                    );
+                        sourceLatitude:
+                            driverUserModel.value.location!.latitude,
+                        sourceLongitude:
+                            driverUserModel.value.location!.longitude,
+                        destinationLatitude: intercityOrderModel
+                            .value.sourceLocationLAtLng!.latitude,
+                        destinationLongitude: intercityOrderModel
+                            .value.sourceLocationLAtLng!.longitude);
                   }
                 }
               }
@@ -178,111 +243,186 @@ class LiveTrackingController extends GetxController {
   BitmapDescriptor? destinationIcon;
   BitmapDescriptor? driverIcon;
 
-  void getPolyline({required double? sourceLatitude, required double? sourceLongitude, required double? destinationLatitude, required double? destinationLongitude}) async {
-    if (sourceLatitude != null && sourceLongitude != null && destinationLatitude != null && destinationLongitude != null) {
-      List<LatLng> polylineCoordinates = [];
-      PolylineRequest polylineRequest = PolylineRequest(
-        origin: PointLatLng(sourceLatitude, sourceLongitude),
-        destination: PointLatLng(destinationLatitude, destinationLongitude),
-        mode: TravelMode.driving,
-      );
+  void getPolyline(
+      {required double? sourceLatitude,
+      required double? sourceLongitude,
+      required double? destinationLatitude,
+      required double? destinationLongitude}) async {
+    print("==== Trazando ruta del conductor al pasajero ====");
 
-      PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
-        request: polylineRequest,
-        googleApiKey: Constant.mapAPIKey,
-      );
-      if (result.points.isNotEmpty) {
-        for (var point in result.points) {
-          polylineCoordinates.add(LatLng(point.latitude, point.longitude));
+    // Verificar API key primero
+    print("API Key actual: '${mapAPIKey}'");
+    print("API Key length: ${mapAPIKey.length}");
+
+    if (mapAPIKey.isEmpty) {
+      print("❌ Error: API key de Google Maps no configurada");
+      return;
+    }
+    print("API Key configurada: ${mapAPIKey}");
+
+    if (sourceLatitude != null &&
+        sourceLongitude != null &&
+        destinationLatitude != null &&
+        destinationLongitude != null) {
+      try {
+        print(
+            "Obteniendo ruta desde ($sourceLatitude, $sourceLongitude) hasta ($destinationLatitude, $destinationLongitude)");
+
+        final request = PolylineRequest(
+          origin: PointLatLng(sourceLatitude, sourceLongitude),
+          destination: PointLatLng(destinationLatitude, destinationLongitude),
+          mode: TravelMode.driving,
+        );
+
+        PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
+            googleApiKey: mapAPIKey, request: request);
+
+        print("Respuesta de Google: ${result.errorMessage ?? 'Sin errores'}");
+        print("Puntos recibidos: ${result.points.length}");
+
+        if (result.points.isNotEmpty) {
+          List<LatLng> polylineCoordinates = result.points
+              .map((point) => LatLng(point.latitude, point.longitude))
+              .toList();
+
+          PolylineId id = const PolylineId("poly");
+          final Polyline polyline = Polyline(
+              polylineId: id,
+              color: Colors.blue,
+              points: polylineCoordinates,
+              width: 5,
+              geodesic: true);
+
+          polyLines.clear();
+          polyLines[id] = polyline;
+          print("✅ Ruta trazada con ${polylineCoordinates.length} puntos");
+
+          // Forzar actualización de la UI
+          update();
+        } else {
+          print("❌ No se recibieron puntos para la ruta");
+          print("Error message: ${result.errorMessage}");
+
+          // Si falla, al menos dibujar una línea recta
+          PolylineId id = const PolylineId("poly");
+          final Polyline polyline = Polyline(
+            polylineId: id,
+            color: Colors.blue,
+            points: [
+              LatLng(sourceLatitude, sourceLongitude),
+              LatLng(destinationLatitude, destinationLongitude)
+            ],
+            width: 5,
+          );
+
+          polyLines.clear();
+          polyLines[id] = polyline;
+          update();
         }
-      } else {
-        print(result.errorMessage.toString());
+      } catch (e) {
+        print("❌ Error al trazar la ruta: $e");
       }
+    } else {
+      print("❌ Coordenadas incompletas para trazar la ruta");
+    }
+    print("==== Trazando ruta del conductor al pasajero ====");
 
-      if (type.value == "orderModel") {
-        addMarker(
-            latitude: orderModel.value.sourceLocationLAtLng!.latitude,
-            longitude: orderModel.value.sourceLocationLAtLng!.longitude,
-            id: "Departure",
-            descriptor: departureIcon!,
-            rotation: 0.0);
-        addMarker(
-            latitude: orderModel.value.destinationLocationLAtLng!.latitude,
-            longitude: orderModel.value.destinationLocationLAtLng!.longitude,
-            id: "Destination",
-            descriptor: destinationIcon!,
-            rotation: 0.0);
-        addMarker(
-            latitude: driverUserModel.value.location!.latitude,
-            longitude: driverUserModel.value.location!.longitude,
-            id: "Driver",
-            descriptor: driverIcon!,
-            rotation: driverUserModel.value.rotation);
+    if (sourceLatitude != null &&
+        sourceLongitude != null &&
+        destinationLatitude != null &&
+        destinationLongitude != null) {
+      try {
+        // 1. Crear el request para obtener la ruta
+        final request = PolylineRequest(
+          origin: PointLatLng(sourceLatitude, sourceLongitude),
+          destination: PointLatLng(destinationLatitude, destinationLongitude),
+          mode: TravelMode.driving,
+        );
 
-        _addPolyLine(polylineCoordinates);
-      } else {
-        addMarker(
-            latitude: intercityOrderModel.value.sourceLocationLAtLng!.latitude,
-            longitude: intercityOrderModel.value.sourceLocationLAtLng!.longitude,
-            id: "Departure",
-            descriptor: departureIcon!,
-            rotation: 0.0);
-        addMarker(
-            latitude: intercityOrderModel.value.destinationLocationLAtLng!.latitude,
-            longitude: intercityOrderModel.value.destinationLocationLAtLng!.longitude,
-            id: "Destination",
-            descriptor: destinationIcon!,
-            rotation: 0.0);
-        addMarker(
-            latitude: driverUserModel.value.location!.latitude,
-            longitude: driverUserModel.value.location!.longitude,
-            id: "Driver",
-            descriptor: driverIcon!,
-            rotation: driverUserModel.value.rotation);
+        // 2. Obtener la ruta de Google
+        PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
+            googleApiKey: mapAPIKey, request: request);
 
-        _addPolyLine(polylineCoordinates);
+        print("Respuesta de Google: ${result.errorMessage ?? 'Sin errores'}");
+
+        // 3. Si tenemos puntos, crear la polyline
+        if (result.points.isNotEmpty) {
+          // Convertir los puntos a coordenadas para el mapa
+          List<LatLng> polylineCoordinates = result.points
+              .map((point) => LatLng(point.latitude, point.longitude))
+              .toList();
+
+          // Crear la polyline
+          PolylineId id = const PolylineId("poly");
+          final Polyline polyline = Polyline(
+              polylineId: id,
+              color: Colors.blue,
+              points: polylineCoordinates,
+              width: 3,
+              geodesic: true);
+
+          // Agregar la polyline al mapa
+          polyLines.clear(); // Limpiar polylines anteriores
+          polyLines[id] = polyline;
+
+          print("✅ Ruta trazada con ${polylineCoordinates.length} puntos");
+
+          // Actualizar la UI
+          update();
+        } else {
+          print("❌ Error al obtener la ruta: ${result.errorMessage}");
+        }
+      } catch (e) {
+        print("❌ Error al trazar la ruta: $e");
       }
     }
   }
 
   RxMap<MarkerId, Marker> markers = <MarkerId, Marker>{}.obs;
 
-  addMarker({required double? latitude, required double? longitude, required String id, required BitmapDescriptor descriptor, required double? rotation}) {
+  addMarker(
+      {required double? latitude,
+      required double? longitude,
+      required String id,
+      required BitmapDescriptor descriptor,
+      required double? rotation}) {
+    if (latitude == null || longitude == null) {
+      print("Error: Coordenadas nulas para el marcador $id");
+      return;
+    }
+
+    print("Agregando marcador: $id en ($latitude, $longitude)");
     MarkerId markerId = MarkerId(id);
-    Marker marker = Marker(markerId: markerId, icon: descriptor, position: LatLng(latitude ?? 0.0, longitude ?? 0.0), rotation: rotation ?? 0.0);
+    Marker marker = Marker(
+        markerId: markerId,
+        position: LatLng(latitude, longitude),
+        icon: descriptor,
+        infoWindow: InfoWindow(title: id),
+        visible: true);
     markers[markerId] = marker;
+    update(); // Forzar actualización de la UI
+    print("Marcador agregado. Total de marcadores: ${markers.length}");
   }
 
   addMarkerSetup() async {
-    if (Constant.selectedMapType != 'osm') {
-      final Uint8List departure = await Constant().getBytesFromAsset('assets/images/pickup.png', 100);
-      final Uint8List destination = await Constant().getBytesFromAsset('assets/images/dropoff.png', 100);
-      final Uint8List driver = await Constant().getBytesFromAsset('assets/images/ic_cab.png', 50);
-      departureIcon = BitmapDescriptor.fromBytes(departure);
-      destinationIcon = BitmapDescriptor.fromBytes(destination);
-      driverIcon = BitmapDescriptor.fromBytes(driver);
-    } else {
-      departureOsmIcon = Image.asset("assets/images/pickup.png", width: 30, height: 30); //OSM
-      destinationOsmIcon = Image.asset("assets/images/dropoff.png", width: 30, height: 30); //OSM
-      driverOsmIcon = Image.asset("assets/images/ic_cab.png", width: 30, height: 30); //OSM
+    print("==== Inicializando marcadores ====");
+    try {
+      // Usar marcadores predeterminados de Google Maps
+      departureIcon = BitmapDescriptor.defaultMarkerWithHue(
+          BitmapDescriptor.hueRed); // Punto rojo para origen
+      destinationIcon = BitmapDescriptor.defaultMarkerWithHue(
+          BitmapDescriptor.hueGreen); // Punto verde para destino
+      driverIcon = BitmapDescriptor.defaultMarkerWithHue(
+          BitmapDescriptor.hueBlue); // Punto azul para conductor
+
+      print("Marcadores predeterminados configurados exitosamente");
+    } catch (e) {
+      print("Error al configurar los marcadores: $e");
     }
   }
 
   RxMap<PolylineId, Polyline> polyLines = <PolylineId, Polyline>{}.obs;
   PolylinePoints polylinePoints = PolylinePoints();
-
-  _addPolyLine(List<LatLng> polylineCoordinates) {
-    PolylineId id = const PolylineId("poly");
-    Polyline polyline = Polyline(
-      polylineId: id,
-      points: polylineCoordinates,
-      consumeTapEvents: true,
-      startCap: Cap.roundCap,
-      width: 6,
-    );
-    polyLines[id] = polyline;
-    updateCameraLocation(polylineCoordinates.first, polylineCoordinates.last, mapController);
-  }
 
   Future<void> updateCameraLocation(
     LatLng source,
@@ -293,12 +433,17 @@ class LiveTrackingController extends GetxController {
 
     LatLngBounds bounds;
 
-    if (source.latitude > destination.latitude && source.longitude > destination.longitude) {
+    if (source.latitude > destination.latitude &&
+        source.longitude > destination.longitude) {
       bounds = LatLngBounds(southwest: destination, northeast: source);
     } else if (source.longitude > destination.longitude) {
-      bounds = LatLngBounds(southwest: LatLng(source.latitude, destination.longitude), northeast: LatLng(destination.latitude, source.longitude));
+      bounds = LatLngBounds(
+          southwest: LatLng(source.latitude, destination.longitude),
+          northeast: LatLng(destination.latitude, source.longitude));
     } else if (source.latitude > destination.latitude) {
-      bounds = LatLngBounds(southwest: LatLng(destination.latitude, source.longitude), northeast: LatLng(source.latitude, destination.longitude));
+      bounds = LatLngBounds(
+          southwest: LatLng(destination.latitude, source.longitude),
+          northeast: LatLng(source.latitude, destination.longitude));
     } else {
       bounds = LatLngBounds(southwest: source, northeast: destination);
     }
@@ -308,7 +453,8 @@ class LiveTrackingController extends GetxController {
     return checkCameraLocation(cameraUpdate, mapController);
   }
 
-  Future<void> checkCameraLocation(CameraUpdate cameraUpdate, GoogleMapController mapController) async {
+  Future<void> checkCameraLocation(
+      CameraUpdate cameraUpdate, GoogleMapController mapController) async {
     mapController.animateCamera(cameraUpdate);
     LatLngBounds l1 = await mapController.getVisibleRegion();
     LatLngBounds l2 = await mapController.getVisibleRegion();
@@ -316,145 +462,5 @@ class LiveTrackingController extends GetxController {
     if (l1.southwest.latitude == -90 || l2.southwest.latitude == -90) {
       return checkCameraLocation(cameraUpdate, mapController);
     }
-  }
-
-  //OSM
-  late MapController mapOsmController;
-  Rx<RoadInfo> roadInfo = RoadInfo().obs;
-  Map<String, GeoPoint> osmMarkers = <String, GeoPoint>{};
-  Image? departureOsmIcon; //OSM
-  Image? destinationOsmIcon; //OSM
-  Image? driverOsmIcon;
-
-  void getOSMPolyline(
-    GeoPoint location,
-    GeoPoint destinationlocation,
-  ) async {
-    try {
-      // GeoPoint destinationLocation;
-      // if (type.value == "orderModel") {
-      //   if (orderModel.value.status == Constant.rideInProgress) {
-      //     destinationLocation =
-      //         GeoPoint(latitude: orderModel.value.destinationLocationLAtLng!.latitude ?? 0, longitude: orderModel.value.destinationLocationLAtLng!.longitude ?? 0);
-      //   } else {
-      //     destinationLocation = GeoPoint(latitude: orderModel.value.sourceLocationLAtLng!.latitude ?? 0, longitude: orderModel.value.sourceLocationLAtLng!.longitude ?? 0);
-      //   }
-      // } else {
-      //   if (type.value == "orderModel") {
-      //     destinationLocation =
-      //         GeoPoint(latitude: intercityOrderModel.value.destinationLocationLAtLng!.latitude ?? 0, longitude: intercityOrderModel.value.destinationLocationLAtLng!.latitude ?? 0);
-      //   } else {
-      //     destinationLocation =
-      //         GeoPoint(latitude: intercityOrderModel.value.sourceLocationLAtLng!.latitude ?? 0, longitude: intercityOrderModel.value.sourceLocationLAtLng!.latitude ?? 0);
-      //   }
-      // }
-      print("======${location.latitude}==${location.longitude}");
-      print("======${destinationlocation.latitude}==${destinationlocation.longitude}");
-
-      if (destinationlocation != null) {
-        await mapOsmController.removeLastRoad();
-        roadInfo.value = await mapOsmController.drawRoad(
-          location,
-          destinationlocation,
-          roadType: RoadType.car,
-          roadOption: const RoadOption(
-            roadWidth: 15,
-            roadColor: AppColors.primary, //themeChange ? AppColors.darkModePrimary :
-            zoomInto: false,
-          ),
-        );
-        mapOsmController.moveTo(
-          GeoPoint(latitude: location.latitude, longitude: location.longitude),
-          animate: true,
-        );
-      }
-    } catch (e) {
-      print('Error: $e');
-    }
-  }
-
-  Future<void> updateOSMCameraLocation({required GeoPoint source, required GeoPoint destination}) async {
-    BoundingBox bounds;
-
-    if (source.latitude > destination.latitude && source.longitude > destination.longitude) {
-      bounds = BoundingBox(
-        north: source.latitude,
-        south: destination.latitude,
-        east: source.longitude,
-        west: destination.longitude,
-      );
-    } else if (source.longitude > destination.longitude) {
-      bounds = BoundingBox(
-        north: destination.latitude,
-        south: source.latitude,
-        east: source.longitude,
-        west: destination.longitude,
-      );
-    } else if (source.latitude > destination.latitude) {
-      bounds = BoundingBox(
-        north: source.latitude,
-        south: destination.latitude,
-        east: destination.longitude,
-        west: source.longitude,
-      );
-    } else {
-      bounds = BoundingBox(
-        north: destination.latitude,
-        south: source.latitude,
-        east: destination.longitude,
-        west: source.longitude,
-      );
-    }
-
-    await mapOsmController.zoomToBoundingBox(bounds, paddinInPixel: 100);
-  }
-
-  setOsmMarker({required GeoPoint departure, required GeoPoint destination}) async {
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      if (osmMarkers.containsKey('Driver')) {
-        await mapOsmController.removeMarker(osmMarkers['Driver']!);
-      }
-
-      await mapOsmController
-          .addMarker(GeoPoint(latitude: driverUserModel.value.location!.latitude!, longitude: driverUserModel.value.location!.longitude!),
-              markerIcon: MarkerIcon(iconWidget: driverOsmIcon),
-              angle: pi / 3,
-              iconAnchor: IconAnchor(
-                anchor: Anchor.top,
-              ))
-          .then((v) {
-        osmMarkers['Driver'] = GeoPoint(latitude: driverUserModel.value.location!.latitude!, longitude: driverUserModel.value.location!.longitude!);
-      });
-
-      if (osmMarkers.containsKey('Source')) {
-        await mapOsmController.removeMarker(osmMarkers['Source']!);
-      }
-      await mapOsmController
-          .addMarker(departure,
-              markerIcon: MarkerIcon(iconWidget: departureOsmIcon),
-              angle: pi / 3,
-              iconAnchor: IconAnchor(
-                anchor: Anchor.top,
-              ))
-          .then((v) {
-        osmMarkers['Source'] = departure;
-      });
-
-      if (osmMarkers.containsKey('Destination')) {
-        await mapOsmController.removeMarker(osmMarkers['Destination']!);
-      }
-
-      await mapOsmController
-          .addMarker(destination,
-              markerIcon: MarkerIcon(iconWidget: destinationOsmIcon),
-              angle: pi / 3,
-              iconAnchor: IconAnchor(
-                anchor: Anchor.top,
-              ))
-          .then((v) {
-        osmMarkers['Destination'] = destination;
-      });
-    });
-    // getOSMPolyline();
   }
 }

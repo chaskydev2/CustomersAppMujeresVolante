@@ -24,7 +24,7 @@ void main() async {
     );
   } else {
     await Firebase.initializeApp(
-      name: 'goRide',
+      name: 'mujeres al volante',
       options: DefaultFirebaseOptions.currentPlatform,
     );
   }
@@ -79,7 +79,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       },
       child: Consumer<DarkThemeProvider>(builder: (context, value, child) {
         return GetMaterialApp(
-            title: 'GoRide',
+            title: 'mujeres al volante',
             debugShowCheckedModeBanner: false,
             theme: Styles.themeData(
                 themeChangeProvider.darkTheme == 0

@@ -40,8 +40,11 @@ class SettingScreen extends StatelessWidget {
                       ),
                       Expanded(
                         child: Container(
-                          decoration:
-                              BoxDecoration(color: Theme.of(context).colorScheme.background, borderRadius: const BorderRadius.only(topLeft: Radius.circular(25), topRight: Radius.circular(25))),
+                          decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.background,
+                              borderRadius: const BorderRadius.only(
+                                  topLeft: Radius.circular(25),
+                                  topRight: Radius.circular(25))),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 10),
                             child: Column(
@@ -54,113 +57,28 @@ class SettingScreen extends StatelessWidget {
                                       ),
                                       Padding(
                                         padding: const EdgeInsets.all(8.0),
-                                        child: Row(
-                                          children: [
-                                            SvgPicture.asset('assets/icons/ic_language.svg', width: 24),
-                                            const SizedBox(
-                                              width: 20,
-                                            ),
-                                            Expanded(
-                                              child: Text(
-                                                "Language".tr,
-                                                style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
-                                              ),
-                                            ),
-                                            SizedBox(
-                                              width: Responsive.width(26, context),
-                                              child: DropdownButtonFormField(
-                                                  isExpanded: true,
-                                                  decoration: const InputDecoration(
-                                                    contentPadding: EdgeInsets.symmetric(vertical: 1),
-                                                    disabledBorder: InputBorder.none,
-                                                    focusedBorder: InputBorder.none,
-                                                    enabledBorder: InputBorder.none,
-                                                    errorBorder: InputBorder.none,
-                                                    border: InputBorder.none,
-                                                    isDense: true,
-                                                  ),
-                                                  value: controller.selectedLanguage.value.id == null ? null : controller.selectedLanguage.value,
-                                                  onChanged: (value) {
-                                                    controller.selectedLanguage.value = value!;
-
-                                                    LocalizationService().changeLocale(value.code.toString());
-                                                    Preferences.setString(Preferences.languageCodeKey, jsonEncode(controller.selectedLanguage.value));
-                                                  },
-                                                  hint:  Text("select".tr),
-                                                  items: controller.languageList.map((item) {
-                                                    return DropdownMenuItem(
-                                                      value: item,
-                                                      child: Text(item.name.toString(), style: GoogleFonts.poppins(fontWeight: FontWeight.w500)),
-                                                    );
-                                                  }).toList()),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      const Divider(),
-                                      Padding(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: Row(
-                                          children: [
-                                            SvgPicture.asset('assets/icons/ic_light_drak.svg', width: 24),
-                                            const SizedBox(
-                                              width: 20,
-                                            ),
-                                            Expanded(child: Text("Light/dark mode".tr, style: GoogleFonts.poppins(fontWeight: FontWeight.w500))),
-                                            SizedBox(
-                                              width: Responsive.width(26, context),
-                                              child: DropdownButtonFormField<String>(
-                                                  isExpanded: true,
-                                                  decoration: const InputDecoration(
-                                                    contentPadding: EdgeInsets.symmetric(vertical: 1),
-                                                    disabledBorder: InputBorder.none,
-                                                    focusedBorder: InputBorder.none,
-                                                    enabledBorder: InputBorder.none,
-                                                    errorBorder: InputBorder.none,
-                                                    border: InputBorder.none,
-                                                    isDense: true,
-                                                  ),
-                                                  validator: (value) => value == null ? 'field required' : null,
-                                                  value: controller.selectedMode.isEmpty ? null : controller.selectedMode.value,
-                                                  onChanged: (value) {
-                                                    controller.selectedMode.value = value!;
-                                                    Preferences.setString(Preferences.themKey, value.toString());
-                                                    if (controller.selectedMode.value == "Dark mode") {
-                                                      themeChange.darkTheme = 0;
-                                                    } else if (controller.selectedMode.value == "Light mode") {
-                                                      themeChange.darkTheme = 1;
-                                                    } else {
-                                                      themeChange.darkTheme = 2;
-                                                    }
-                                                  },
-                                                  hint:  Text("select".tr),
-                                                  items: controller.modeList.map((item) {
-                                                    return DropdownMenuItem(
-                                                      value: item,
-                                                      child: Text(item.toString(), style: GoogleFonts.poppins(fontWeight: FontWeight.w500)),
-                                                    );
-                                                  }).toList()),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      const Divider(),
-                                      Padding(
-                                        padding: const EdgeInsets.all(8.0),
                                         child: InkWell(
                                           onTap: () async {
-                                            final Uri url = Uri.parse(Constant.supportURL.toString());
+                                            final Uri url = Uri.parse(
+                                                Constant.supportURL.toString());
                                             if (!await launchUrl(url)) {
-                                              throw Exception('Could not launch ${Constant.supportURL.toString()}'.tr);
+                                              throw Exception(
+                                                  'Could not launch ${Constant.supportURL.toString()}'
+                                                      .tr);
                                             }
                                           },
                                           child: Row(
                                             children: [
-                                              SvgPicture.asset('assets/icons/ic_support.svg', width: 24),
+                                              SvgPicture.asset(
+                                                  'assets/icons/ic_support.svg',
+                                                  width: 24),
                                               const SizedBox(
                                                 width: 20,
                                               ),
-                                              Text("Support".tr, style: GoogleFonts.poppins(fontWeight: FontWeight.w500)),
+                                              Text("Support".tr,
+                                                  style: GoogleFonts.poppins(
+                                                      fontWeight:
+                                                          FontWeight.w500)),
                                             ],
                                           ),
                                         ),
@@ -174,11 +92,16 @@ class SettingScreen extends StatelessWidget {
                                           },
                                           child: Row(
                                             children: [
-                                              SvgPicture.asset('assets/icons/ic_delete.svg', width: 24),
+                                              SvgPicture.asset(
+                                                  'assets/icons/ic_delete.svg',
+                                                  width: 24),
                                               const SizedBox(
                                                 width: 20,
                                               ),
-                                              Text("Delete Account".tr, style: GoogleFonts.poppins(fontWeight: FontWeight.w500))
+                                              Text("Delete Account".tr,
+                                                  style: GoogleFonts.poppins(
+                                                      fontWeight:
+                                                          FontWeight.w500))
                                             ],
                                           ),
                                         ),
@@ -186,8 +109,9 @@ class SettingScreen extends StatelessWidget {
                                     ],
                                   ),
                                 ),
-                                 Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 10),
+                                Padding(
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 10),
                                   child: Text("V ${Constant.appVersion}".tr),
                                 )
                               ],
@@ -204,7 +128,7 @@ class SettingScreen extends StatelessWidget {
   showAlertDialog(BuildContext context) {
     // set up the button
     Widget okButton = TextButton(
-      child:  Text("OK".tr),
+      child: Text("OK".tr),
       onPressed: () async {
         ShowToastDialog.showLoader("Please wait".tr);
         await FireStoreUtils.deleteUser().then((value) {
@@ -219,7 +143,7 @@ class SettingScreen extends StatelessWidget {
       },
     );
     Widget cancel = TextButton(
-      child:  Text("Cancel".tr),
+      child: Text("Cancel".tr),
       onPressed: () {
         Get.back();
       },
@@ -227,8 +151,8 @@ class SettingScreen extends StatelessWidget {
 
     // set up the AlertDialog
     AlertDialog alert = AlertDialog(
-      title:  Text("Account delete".tr),
-      content:  Text("Are you sure want to delete Account.".tr),
+      title: Text("Account delete".tr),
+      content: Text("Are you sure want to delete Account.".tr),
       actions: [
         okButton,
         cancel,
